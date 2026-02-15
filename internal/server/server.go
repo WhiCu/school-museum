@@ -12,7 +12,6 @@ import (
 
 	"github.com/WhiCu/school-museum/internal/config"
 	"github.com/WhiCu/school-museum/internal/store"
-	"github.com/WhiCu/school-museum/internal/telemetry"
 	webadmin "github.com/WhiCu/school-museum/internal/web-admin"
 	webmuseum "github.com/WhiCu/school-museum/internal/web-museum"
 	"github.com/danielgtaylor/huma/v2"
@@ -29,7 +28,6 @@ type App struct {
 	log *slog.Logger
 
 	shutdownTimeout time.Duration
-	tp              func()
 }
 
 func (a *App) gracefulShutdownCtx(ctx context.Context) error {
@@ -53,25 +51,23 @@ func (a *App) gracefulShutdownCtx(ctx context.Context) error {
 }
 
 func (a *App) shutdown(ctx context.Context) (err error) {
-	a.tp()
 	return a.srv.Shutdown(ctx)
 }
 
 func NewApp(cfg *config.Config, log *slog.Logger) *App {
 	//TODO: remove
 
-	umami := telemetry.NewUmami("http://umami:3000", "7db11537-6def-4b16-a9c6-0ae33ac0641a")
+	// umami := telemetry.NewUmami("http://umami:3000", "7db11537-6def-4b16-a9c6-0ae33ac0641a")
 
 	s := store.New()
 
 	r := bunrouter.New(
-		bunrouter.Use(func(next bunrouter.HandlerFunc) bunrouter.HandlerFunc {
-			return func(w http.ResponseWriter, req bunrouter.Request) error {
-				fmt.Printf("API call: %s %s\n", req.Method, req.URL.Path)
-				umami.Track(req.Request, "API Call")
-				return next(w, req)
-			}
-		}),
+		// bunrouter.Use(func(next bunrouter.HandlerFunc) bunrouter.HandlerFunc {
+		// 	return func(w http.ResponseWriter, req bunrouter.Request) error {
+		// 		// umami.Track(req.Request, "API Call")
+		// 		return next(w, req)
+		// 	}
+		// }),
 		bunrouter.Use(bunrouterotel.NewMiddleware(
 			bunrouterotel.WithClientIP(),
 		)),

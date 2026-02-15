@@ -12,7 +12,7 @@ type NewsStorage struct {
 	db *bun.DB
 }
 
-var _ Storage[model.News] = (*NewStorage)(nil)
+var _ Storage[model.News] = (*NewsStorage)(nil)
 
 func NewNewsStorage(db *bun.DB) *NewsStorage {
 	return &NewsStorage{

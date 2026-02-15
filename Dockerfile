@@ -10,8 +10,7 @@ COPY ./main.go ./main.go
 COPY cmd cmd
 COPY pkg pkg
 COPY internal internal
-# COPY db db
-# COPY config config
+COPY db db
 
 # RUN go build -o /out/app ./cmd/app
 

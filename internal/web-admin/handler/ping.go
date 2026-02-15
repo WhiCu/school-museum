@@ -29,6 +29,7 @@ func (h *Handler) Ping(api huma.API) {
 			Description: "A simple endpoint to check if the admin server is running.",
 			Tags: []string{
 				"Test",
+				"Admin",
 			},
 		},
 		func(ctx context.Context, req *pingInput) (res *pingOutput, err error) {
