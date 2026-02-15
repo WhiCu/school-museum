@@ -4,17 +4,23 @@ import (
 	"log/slog"
 
 	"github.com/WhiCu/school-museum/db/model"
-	"github.com/WhiCu/school-museum/internal/store"
+	"github.com/WhiCu/school-museum/db/storage"
 	"github.com/google/uuid"
 )
 
 type Storage struct {
-	store *store.Store
-	log   *slog.Logger
+	News        storage.Storage[model.News]
+	Exhibitions storage.Storage[model.Exhibition]
+	Exhibits    storage.Storage[model.Exhibit]
+	log         *slog.Logger
 }
 
-func NewStorage(s *store.Store, log *slog.Logger) *Storage {
-	return &Storage{store: s, log: log}
+func NewStorage(news storage.Storage[model.News], exhibitions storage.Storage[model.Exhibition], exhibits storage.Storage[model.Exhibit], log *slog.Logger) *Storage {
+	return &Storage{
+		News:        news,
+		Exhibitions: exhibitions,
+		Exhibits:    exhibits,
+		log:         log}
 }
 
 // --- News ---
@@ -25,42 +31,44 @@ func (s *Storage) CreateNews(title, content string) model.News {
 }
 
 func (s *Storage) DeleteNews(id uuid.UUID) bool {
-	return s.store.News.Delete(id)
+	// return s.store.News.Delete(id)
+	return false
 }
 
 // --- Exhibitions ---
 
 func (s *Storage) CreateExhibition(title, description string) model.Exhibition {
-	return s.store.Exhibitions.Create(title, description)
+	// return s.store.Exhibitions.Create(title, description)
+	return model.Exhibition{}
 }
 
 func (s *Storage) UpdateExhibition(id uuid.UUID, title, description string) (model.Exhibition, bool) {
-	return s.store.Exhibitions.Update(id, title, description)
+	// return s.store.Exhibitions.Update(id, title, description)
+	return model.Exhibition{}, false
 }
 
 func (s *Storage) DeleteExhibition(id uuid.UUID) bool {
-	ok := s.store.Exhibitions.Delete(id)
-	if ok {
-		s.store.Exhibits.DeleteByExhibitionID(id)
-	}
-	return ok
+	return false
 }
 
 func (s *Storage) ExhibitionExists(id uuid.UUID) bool {
-	_, ok := s.store.Exhibitions.GetByID(id)
-	return ok
+	return false
 }
 
 // --- Exhibits ---
 
 func (s *Storage) CreateExhibit(exhibitionID uuid.UUID, title, description, imageURL string) model.Exhibit {
-	return s.store.Exhibits.Create(exhibitionID, title, description, imageURL)
+	// return s.store.Exhibits.Create(exhibitionID, title, description, imageURL)
+	return model.Exhibit{}
 }
 
 func (s *Storage) UpdateExhibit(id uuid.UUID, title, description, imageURL string) (model.Exhibit, bool) {
-	return s.store.Exhibits.Update(id, title, description, imageURL)
+	// return s.store.Exhibits.Update(id, title, description, imageURL)
+	return model.Exhibit{}, false
 }
 
 func (s *Storage) DeleteExhibit(id uuid.UUID) bool {
-	return s.store.Exhibits.Delete(id)
+	// return s.store.Exhibits.Delete(id)
+	return false
+
 }

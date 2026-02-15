@@ -10,9 +10,9 @@ import (
 )
 
 func Run(cfg *config.Config, log *slog.Logger) error {
-	server := server.NewApp(cfg, log)
-
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	server := server.NewApp(ctx, cfg, log)
 
 	if err := server.Run(ctx); err != nil {
 		log.Error("Server failed to start", slog.String("ERR", err.Error()))

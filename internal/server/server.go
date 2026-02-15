@@ -10,8 +10,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/WhiCu/school-museum/db"
+	"github.com/WhiCu/school-museum/db/model"
+	"github.com/WhiCu/school-museum/db/storage"
 	"github.com/WhiCu/school-museum/internal/config"
-	"github.com/WhiCu/school-museum/internal/store"
 	webadmin "github.com/WhiCu/school-museum/internal/web-admin"
 	webmuseum "github.com/WhiCu/school-museum/internal/web-museum"
 	"github.com/danielgtaylor/huma/v2"
@@ -54,20 +56,20 @@ func (a *App) shutdown(ctx context.Context) (err error) {
 	return a.srv.Shutdown(ctx)
 }
 
-func NewApp(cfg *config.Config, log *slog.Logger) *App {
+func NewApp(ctx context.Context, cfg *config.Config, log *slog.Logger) *App {
 	//TODO: remove
 
-	// umami := telemetry.NewUmami("http://umami:3000", "7db11537-6def-4b16-a9c6-0ae33ac0641a")
+	db, err := db.NewDB(ctx, cfg.Storage.DSN())
+	if err != nil {
+		log.Error("failed to create database connection", slog.String("error", err.Error()))
+		panic(err)
+	}
 
-	s := store.New()
+	news := storage.NewNewsStorage(db)
+	exhibits := storage.NewExhibitStorage(db)
+	exhibitions := storage.Storage[model.Exhibition](nil)
 
 	r := bunrouter.New(
-		// bunrouter.Use(func(next bunrouter.HandlerFunc) bunrouter.HandlerFunc {
-		// 	return func(w http.ResponseWriter, req bunrouter.Request) error {
-		// 		// umami.Track(req.Request, "API Call")
-		// 		return next(w, req)
-		// 	}
-		// }),
 		bunrouter.Use(bunrouterotel.NewMiddleware(
 			bunrouterotel.WithClientIP(),
 		)),
@@ -78,11 +80,13 @@ func NewApp(cfg *config.Config, log *slog.Logger) *App {
 
 	// r.Mount("/museum", webmuseum.NewHandler(s, log.WithGroup("web-museum")))
 	museum := huma.NewGroup(api, "/museum")
-	webmuseum.RegisterHandlers(museum, s, log.WithGroup("web-museum"))
+	webmuseum.RegisterHandlers(
+		museum, news, exhibitions, exhibits, log.WithGroup("web-museum"))
 
 	// r.Mount("/admin", webadmin.NewHandler(s, log.WithGroup("web-admin")))
 	admin := huma.NewGroup(api, "/admin")
-	webadmin.RegisterHandlers(admin, s, log.WithGroup("web-admin"))
+	webadmin.RegisterHandlers(
+		admin, news, exhibitions, exhibits, log.WithGroup("web-admin"))
 
 	return &App{
 		srv: http.Server{

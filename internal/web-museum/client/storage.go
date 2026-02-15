@@ -4,17 +4,23 @@ import (
 	"log/slog"
 
 	"github.com/WhiCu/school-museum/db/model"
-	"github.com/WhiCu/school-museum/internal/store"
+	"github.com/WhiCu/school-museum/db/storage"
 	"github.com/google/uuid"
 )
 
 type Storage struct {
-	store *store.Store
-	log   *slog.Logger
+	News        storage.Storage[model.News]
+	Exhibitions storage.Storage[model.Exhibition]
+	Exhibits    storage.Storage[model.Exhibit]
+	log         *slog.Logger
 }
 
-func NewStorage(s *store.Store, log *slog.Logger) *Storage {
-	return &Storage{store: s, log: log}
+func NewStorage(news storage.Storage[model.News], exhibitions storage.Storage[model.Exhibition], exhibits storage.Storage[model.Exhibit], log *slog.Logger) *Storage {
+	return &Storage{
+		News:        news,
+		Exhibitions: exhibitions,
+		Exhibits:    exhibits,
+		log:         log}
 }
 
 func (s *Storage) GetAllNews() []model.News {
@@ -33,7 +39,8 @@ func (s *Storage) GetAllExhibitions() []model.Exhibition {
 }
 
 func (s *Storage) GetExhibitionByID(id uuid.UUID) (model.Exhibition, bool) {
-	return s.store.Exhibitions.GetByID(id)
+	// return s.store.Exhibitions.GetByID(id)
+	return model.Exhibition{}, false
 }
 
 func (s *Storage) GetExhibitsByExhibitionID(exhibitionID uuid.UUID) []model.Exhibit {

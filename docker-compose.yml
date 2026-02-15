@@ -6,6 +6,7 @@ services:
     container_name: server
     environment:
       - LOG_LEVEL=debug
+      - DB_HOST=db
     depends_on:
       db:
         condition: service_healthy
