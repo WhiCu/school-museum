@@ -1,0 +1,47 @@
+version: '3'
+
+silent: false
+
+env:
+  APP_NAME: "school-museum"
+  PATH_EXE: ./tmp/bin
+  PATH_CLI: .
+  PATH_CONFIG: ./config/config.kdl
+  PORT: 8080
+
+dotenv: ['.env', './config/.env']
+
+
+tasks:
+  test:
+    desc: Run tests
+    cmds:
+      - echo "Run tests"
+      - go test ./... -v -cover
+
+  build:cli:
+    desc: Build the CLI application
+    deps: [test]
+    cmds:
+      - echo "Build the CLI application"
+      - go build -o {{.PATH_EXE}}/{{.APP_NAME}}.exe {{.PATH_CLI}}/main.go
+
+  run:cli:
+    desc: Run the CLI application
+    # deps: [test]
+    cmds:
+      - echo "Run the CLI application"
+      - go run {{.PATH_CLI}}/main.go -t kdl
+
+  air:
+    desc: Run air
+    deps: [test]
+    cmds:
+      - echo "Run air"
+      - air -d 
+  
+  release:
+    desc: Build the application for release
+    deps: [test]
+    cmds:
+      - echo "Build the application for release"

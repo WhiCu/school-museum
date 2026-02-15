@@ -1,0 +1,83 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: server
+    environment:
+      - LOG_LEVEL=info
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    networks:
+      - dbnet
+    
+  
+  db:
+    image: postgres:18
+    container_name: db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: school_museum
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d school_museum"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    networks:
+      - dbnet
+    
+  jaeger:
+    image: jaegertracing/all-in-one:1.76.0
+    container_name: jaeger
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    # networks:
+    #   - dbnet
+  umami:
+    image: elestio/umami:v3.0.3
+    container_name: umami
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/school_museum?sslmode=disable
+      - HASH_SALT=some_random_salt
+      - COOKIE_SECRET=some_random_secret
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    networks:
+      - dbnet
+
+volumes:
+  pgdata:
+  ch_data:
+
+networks:
+  dbnet:
+    driver: bridge

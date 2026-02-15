@@ -1,0 +1,21 @@
+server host="0.0.0.0" port="8080" {    
+    shutdown_timeout "30s"
+    read_timeout "10s"
+    write_timeout "30s"
+    idle_timeout "30s"
+}
+
+logger level="debug" {
+    path "logs/school-museum.log"
+    size 128
+    age 7
+    backups 16
+    compress true
+}
+
+storage host="localhost" port="5432" {
+    name "school_museum"
+    user "user"
+    pass "password"
+    
+}
