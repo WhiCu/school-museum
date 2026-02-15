@@ -20,8 +20,7 @@ services:
           memory: 128M
     networks:
       - dbnet
-    
-  
+
   db:
     image: postgres:18
     container_name: db
@@ -57,7 +56,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 128M
     networks:
       - dbnet
 
@@ -75,7 +74,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 128M
     networks:
       - dbnet
 

@@ -13,11 +13,23 @@ import (
 )
 
 // UmamiClient отправляет события аналитики в Umami.
+// Использует ограниченный пул воркеров, чтобы не расти неограниченно под нагрузкой.
 type UmamiClient struct {
 	url       string
 	websiteID string
 	client    *http.Client
 	log       *slog.Logger
+	queue     chan trackEvent
+}
+
+type trackEvent struct {
+	path      string
+	hostname  string
+	title     string
+	language  string
+	referrer  string
+	userAgent string
+	ip        string
 }
 
 // UmamiOpts содержит параметры для создания клиента Umami.
@@ -29,6 +41,13 @@ type UmamiOpts struct {
 	Domain    string
 }
 
+const (
+	// Максимальное количество событий в очереди.
+	umamiBufSize = 1024
+	// Количество воркеров, отправляющих события.
+	umamiWorkers = 4
+)
+
 // NewUmamiClient создаёт клиент для Umami.
 // Если WebsiteID пуст — автоматически ищет или создаёт website через API.
 func NewUmamiClient(ctx context.Context, opts UmamiOpts, log *slog.Logger) (*UmamiClient, error) {
@@ -36,8 +55,14 @@ func NewUmamiClient(ctx context.Context, opts UmamiOpts, log *slog.Logger) (*Uma
 		url: opts.URL,
 		client: &http.Client{
 			Timeout: 10 * time.Second,
+			Transport: &http.Transport{
+				MaxIdleConns:        umamiWorkers * 2,
+				MaxIdleConnsPerHost: umamiWorkers * 2,
+				IdleConnTimeout:     30 * time.Second,
+			},
 		},
-		log: log,
+		log:   log,
+		queue: make(chan trackEvent, umamiBufSize),
 	}
 
 	websiteID := opts.WebsiteID
@@ -50,10 +75,29 @@ func NewUmamiClient(ctx context.Context, opts UmamiOpts, log *slog.Logger) (*Uma
 	}
 	c.websiteID = websiteID
 
-	// Для трекинга таймаут может быть короче
 	c.client.Timeout = 5 * time.Second
 
+	// Запускаем пул воркеров
+	for range umamiWorkers {
+		go c.worker(ctx)
+	}
+
 	return c, nil
+}
+
+// worker читает события из канала и отправляет их в Umami.
+func (u *UmamiClient) worker(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case ev, ok := <-u.queue:
+			if !ok {
+				return
+			}
+			u.send(ev)
+		}
+	}
 }
 
 // ensureWebsite логинится в Umami, ищет сайт по домену; если не найден — создаёт.
@@ -193,67 +237,84 @@ func (u *UmamiClient) createWebsite(ctx context.Context, token, domain string) (
 	return result.ID, nil
 }
 
-// Track отправляет событие page-view в Umami (fire-and-forget).
+// Track ставит событие в очередь для асинхронной отправки.
+// Если очередь полна — событие отбрасывается (back-pressure).
 func (u *UmamiClient) Track(r *http.Request, eventName string) {
-	go func() {
-		ip := r.Header.Get("X-Forwarded-For")
-		if ip == "" {
-			ip = r.Header.Get("X-Real-IP")
-		}
-		if ip == "" {
-			ip = r.RemoteAddr
-		}
+	ip := r.Header.Get("X-Forwarded-For")
+	if ip == "" {
+		ip = r.Header.Get("X-Real-IP")
+	}
+	if ip == "" {
+		ip = r.RemoteAddr
+	}
 
-		// Umami требует hostname без порта
-		hostname := r.Host
-		if h, _, err := net.SplitHostPort(hostname); err == nil {
-			hostname = h
-		}
+	hostname := r.Host
+	if h, _, err := net.SplitHostPort(hostname); err == nil {
+		hostname = h
+	}
 
-		payload := map[string]any{
-			"type": "event",
-			"payload": map[string]any{
-				"website":  u.websiteID,
-				"url":      r.URL.Path,
-				"hostname": hostname,
-				"title":    eventName,
-				"language": r.Header.Get("Accept-Language"),
-				"referrer": r.Referer(),
-			},
-		}
+	ev := trackEvent{
+		path:      r.URL.Path,
+		hostname:  hostname,
+		title:     eventName,
+		language:  r.Header.Get("Accept-Language"),
+		referrer:  r.Referer(),
+		userAgent: r.UserAgent(),
+		ip:        ip,
+	}
 
-		body, err := json.Marshal(payload)
-		if err != nil {
-			u.log.Warn("umami: failed to marshal payload", slog.String("error", err.Error()))
-			return
-		}
+	select {
+	case u.queue <- ev:
+	default:
+		// Очередь полна — сбрасываем событие, чтобы не блокировать запрос
+	}
+}
 
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
+// send выполняет HTTP-отправку одного события в Umami.
+func (u *UmamiClient) send(ev trackEvent) {
+	payload := map[string]any{
+		"type": "event",
+		"payload": map[string]any{
+			"website":  u.websiteID,
+			"url":      ev.path,
+			"hostname": ev.hostname,
+			"title":    ev.title,
+			"language": ev.language,
+			"referrer": ev.referrer,
+		},
+	}
 
-		req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.url+"/api/send", bytes.NewReader(body))
-		if err != nil {
-			u.log.Warn("umami: failed to create request", slog.String("error", err.Error()))
-			return
-		}
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("User-Agent", r.UserAgent())
-		if ip != "" {
-			req.Header.Set("X-Forwarded-For", ip)
-		}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		u.log.Warn("umami: failed to marshal payload", slog.String("error", err.Error()))
+		return
+	}
 
-		resp, err := u.client.Do(req)
-		if err != nil {
-			u.log.Warn("umami: failed to send event", slog.String("error", err.Error()))
-			return
-		}
-		resp.Body.Close()
-		if resp.StatusCode >= 300 {
-			u.log.Warn("umami: unexpected response",
-				slog.Int("status", resp.StatusCode),
-				slog.String("url", r.URL.Path))
-		}
-	}()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.url+"/api/send", bytes.NewReader(body))
+	if err != nil {
+		u.log.Warn("umami: failed to create request", slog.String("error", err.Error()))
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", ev.userAgent)
+	if ev.ip != "" {
+		req.Header.Set("X-Forwarded-For", ev.ip)
+	}
+
+	resp, err := u.client.Do(req)
+	if err != nil {
+		u.log.Warn("umami: failed to send event", slog.String("error", err.Error()))
+		return
+	}
+	resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		u.log.Warn("umami: unexpected response",
+			slog.Int("status", resp.StatusCode),
+			slog.String("url", ev.path))
+	}
 }
 
 // Middleware возвращает HTTP middleware, которое автоматически трекает каждый запрос в Umami.

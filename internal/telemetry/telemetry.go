@@ -40,8 +40,13 @@ func InitOTLP(ctx context.Context, endpoint, serviceName string, log *slog.Logge
 	}
 
 	tp := sdktrace.NewTracerProvider(
-		sdktrace.WithBatcher(traceExp, sdktrace.WithBatchTimeout(5*time.Second)),
+		sdktrace.WithBatcher(traceExp,
+			sdktrace.WithBatchTimeout(5*time.Second),
+			sdktrace.WithMaxExportBatchSize(512),
+			sdktrace.WithMaxQueueSize(2048),
+		),
 		sdktrace.WithResource(res),
+		sdktrace.WithSampler(sdktrace.ParentBased(sdktrace.TraceIDRatioBased(0.1))),
 	)
 	otel.SetTracerProvider(tp)
 	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(
