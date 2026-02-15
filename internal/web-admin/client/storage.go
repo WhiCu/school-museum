@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/WhiCu/school-museum/db/model"
@@ -20,55 +21,89 @@ func NewStorage(news storage.Storage[model.News], exhibitions storage.Storage[mo
 		News:        news,
 		Exhibitions: exhibitions,
 		Exhibits:    exhibits,
-		log:         log}
+		log:         log,
+	}
 }
 
 // --- News ---
 
-func (s *Storage) CreateNews(title, content string) model.News {
-	// return s.store.News.Create(title, content)
-	return model.News{}
+func (s *Storage) CreateNews(ctx context.Context, n model.News) (model.News, error) {
+	id, err := s.News.Create(ctx, n)
+	if err != nil {
+		s.log.Error("failed to create news", slog.String("error", err.Error()))
+		return model.News{}, err
+	}
+	n.ID = id
+	return n, nil
 }
 
-func (s *Storage) DeleteNews(id uuid.UUID) bool {
-	// return s.store.News.Delete(id)
-	return false
+func (s *Storage) DeleteNews(ctx context.Context, id uuid.UUID) error {
+	if err := s.News.Delete(ctx, id); err != nil {
+		s.log.Error("failed to delete news", slog.String("id", id.String()), slog.String("error", err.Error()))
+		return err
+	}
+	return nil
 }
 
 // --- Exhibitions ---
 
-func (s *Storage) CreateExhibition(title, description string) model.Exhibition {
-	// return s.store.Exhibitions.Create(title, description)
-	return model.Exhibition{}
+func (s *Storage) CreateExhibition(ctx context.Context, ex model.Exhibition) (model.Exhibition, error) {
+	id, err := s.Exhibitions.Create(ctx, ex)
+	if err != nil {
+		s.log.Error("failed to create exhibition", slog.String("error", err.Error()))
+		return model.Exhibition{}, err
+	}
+	ex.ID = id
+	return ex, nil
 }
 
-func (s *Storage) UpdateExhibition(id uuid.UUID, title, description string) (model.Exhibition, bool) {
-	// return s.store.Exhibitions.Update(id, title, description)
-	return model.Exhibition{}, false
+func (s *Storage) UpdateExhibition(ctx context.Context, ex model.Exhibition) (model.Exhibition, error) {
+	updated, err := s.Exhibitions.Update(ctx, ex)
+	if err != nil {
+		s.log.Error("failed to update exhibition", slog.String("id", ex.ID.String()), slog.String("error", err.Error()))
+		return model.Exhibition{}, err
+	}
+	return updated, nil
 }
 
-func (s *Storage) DeleteExhibition(id uuid.UUID) bool {
-	return false
+func (s *Storage) DeleteExhibition(ctx context.Context, id uuid.UUID) error {
+	if err := s.Exhibitions.Delete(ctx, id); err != nil {
+		s.log.Error("failed to delete exhibition", slog.String("id", id.String()), slog.String("error", err.Error()))
+		return err
+	}
+	return nil
 }
 
-func (s *Storage) ExhibitionExists(id uuid.UUID) bool {
-	return false
+func (s *Storage) ExhibitionExists(ctx context.Context, id uuid.UUID) bool {
+	_, err := s.Exhibitions.Read(ctx, id)
+	return err == nil
 }
 
 // --- Exhibits ---
 
-func (s *Storage) CreateExhibit(exhibitionID uuid.UUID, title, description, imageURL string) model.Exhibit {
-	// return s.store.Exhibits.Create(exhibitionID, title, description, imageURL)
-	return model.Exhibit{}
+func (s *Storage) CreateExhibit(ctx context.Context, e model.Exhibit) (model.Exhibit, error) {
+	id, err := s.Exhibits.Create(ctx, e)
+	if err != nil {
+		s.log.Error("failed to create exhibit", slog.String("error", err.Error()))
+		return model.Exhibit{}, err
+	}
+	e.ID = id
+	return e, nil
 }
 
-func (s *Storage) UpdateExhibit(id uuid.UUID, title, description, imageURL string) (model.Exhibit, bool) {
-	// return s.store.Exhibits.Update(id, title, description, imageURL)
-	return model.Exhibit{}, false
+func (s *Storage) UpdateExhibit(ctx context.Context, e model.Exhibit) (model.Exhibit, error) {
+	updated, err := s.Exhibits.Update(ctx, e)
+	if err != nil {
+		s.log.Error("failed to update exhibit", slog.String("id", e.ID.String()), slog.String("error", err.Error()))
+		return model.Exhibit{}, err
+	}
+	return updated, nil
 }
 
-func (s *Storage) DeleteExhibit(id uuid.UUID) bool {
-	// return s.store.Exhibits.Delete(id)
-	return false
-
+func (s *Storage) DeleteExhibit(ctx context.Context, id uuid.UUID) error {
+	if err := s.Exhibits.Delete(ctx, id); err != nil {
+		s.log.Error("failed to delete exhibit", slog.String("id", id.String()), slog.String("error", err.Error()))
+		return err
+	}
+	return nil
 }

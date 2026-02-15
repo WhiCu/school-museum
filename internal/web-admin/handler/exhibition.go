@@ -2,11 +2,9 @@ package handler
 
 import (
 	"context"
-	"errors"
 	"net/http"
 
 	"github.com/WhiCu/school-museum/db/model"
-	"github.com/WhiCu/school-museum/db/storage"
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/google/uuid"
 )
@@ -37,7 +35,13 @@ func (h *Handler) CreateExhibition(api huma.API) {
 			Tags:        []string{"Admin", "Exhibitions"},
 		},
 		func(ctx context.Context, req *createExhibitionInput) (*createExhibitionOutput, error) {
-			ex := h.service.CreateExhibition(req.Body.Title, req.Body.Description)
+			ex, err := h.service.CreateExhibition(ctx, model.Exhibition{
+				Title:       req.Body.Title,
+				Description: req.Body.Description,
+			})
+			if err != nil {
+				return nil, huma.Error500InternalServerError("не удалось создать экспозицию")
+			}
 			return &createExhibitionOutput{Body: ex}, nil
 		},
 	)
@@ -71,12 +75,13 @@ func (h *Handler) UpdateExhibition(api huma.API) {
 			},
 		},
 		func(ctx context.Context, req *updateExhibitionInput) (*updateExhibitionOutput, error) {
-			ex, err := h.service.UpdateExhibition(req.ID, req.Body.Title, req.Body.Description)
+			ex, err := h.service.UpdateExhibition(ctx, model.Exhibition{
+				ID:          req.ID,
+				Title:       req.Body.Title,
+				Description: req.Body.Description,
+			})
 			if err != nil {
-				if errors.Is(err, storage.ErrNotFound) {
-					return nil, huma.Error404NotFound("экспозиция не найдена")
-				}
-				return nil, huma.Error500InternalServerError("внутренняя ошибка")
+				return nil, huma.Error500InternalServerError("не удалось обновить экспозицию")
 			}
 			return &updateExhibitionOutput{Body: ex}, nil
 		},
@@ -100,11 +105,8 @@ func (h *Handler) DeleteExhibition(api huma.API) {
 			Tags:        []string{"Admin", "Exhibitions"},
 		},
 		func(ctx context.Context, req *deleteExhibitionInput) (*struct{}, error) {
-			if err := h.service.DeleteExhibition(req.ID); err != nil {
-				if errors.Is(err, storage.ErrNotFound) {
-					return nil, huma.Error404NotFound("экспозиция не найдена")
-				}
-				return nil, huma.Error500InternalServerError("внутренняя ошибка")
+			if err := h.service.DeleteExhibition(ctx, req.ID); err != nil {
+				return nil, huma.Error500InternalServerError("не удалось удалить экспозицию")
 			}
 			return nil, nil
 		},

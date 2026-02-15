@@ -1,25 +1,29 @@
 package service
 
 import (
+	"context"
+	"errors"
+	"fmt"
 	"log/slog"
 
 	"github.com/WhiCu/school-museum/db/model"
-	"github.com/WhiCu/school-museum/db/storage"
 	"github.com/google/uuid"
 )
 
+var ErrExhibitionNotFound = errors.New("exhibition not found")
+
 type Storage interface {
-	CreateNews(title, content string) model.News
-	DeleteNews(id uuid.UUID) bool
+	CreateNews(ctx context.Context, n model.News) (model.News, error)
+	DeleteNews(ctx context.Context, id uuid.UUID) error
 
-	CreateExhibition(title, description string) model.Exhibition
-	UpdateExhibition(id uuid.UUID, title, description string) (model.Exhibition, bool)
-	DeleteExhibition(id uuid.UUID) bool
-	ExhibitionExists(id uuid.UUID) bool
+	CreateExhibition(ctx context.Context, ex model.Exhibition) (model.Exhibition, error)
+	UpdateExhibition(ctx context.Context, ex model.Exhibition) (model.Exhibition, error)
+	DeleteExhibition(ctx context.Context, id uuid.UUID) error
+	ExhibitionExists(ctx context.Context, id uuid.UUID) bool
 
-	CreateExhibit(exhibitionID uuid.UUID, title, description, imageURL string) model.Exhibit
-	UpdateExhibit(id uuid.UUID, title, description, imageURL string) (model.Exhibit, bool)
-	DeleteExhibit(id uuid.UUID) bool
+	CreateExhibit(ctx context.Context, e model.Exhibit) (model.Exhibit, error)
+	UpdateExhibit(ctx context.Context, e model.Exhibit) (model.Exhibit, error)
+	DeleteExhibit(ctx context.Context, id uuid.UUID) error
 }
 
 type Service struct {
@@ -36,58 +40,41 @@ func NewService(storage Storage, log *slog.Logger) *Service {
 
 // --- News ---
 
-func (s *Service) CreateNews(title, content string) model.News {
-	return s.storage.CreateNews(title, content)
+func (s *Service) CreateNews(ctx context.Context, n model.News) (model.News, error) {
+	return s.storage.CreateNews(ctx, n)
 }
 
-func (s *Service) DeleteNews(id uuid.UUID) error {
-	if !s.storage.DeleteNews(id) {
-		return storage.ErrNotFound
-	}
-	return nil
+func (s *Service) DeleteNews(ctx context.Context, id uuid.UUID) error {
+	return s.storage.DeleteNews(ctx, id)
 }
 
 // --- Exhibitions ---
 
-func (s *Service) CreateExhibition(title, description string) model.Exhibition {
-	return s.storage.CreateExhibition(title, description)
+func (s *Service) CreateExhibition(ctx context.Context, ex model.Exhibition) (model.Exhibition, error) {
+	return s.storage.CreateExhibition(ctx, ex)
 }
 
-func (s *Service) UpdateExhibition(id uuid.UUID, title, description string) (model.Exhibition, error) {
-	ex, ok := s.storage.UpdateExhibition(id, title, description)
-	if !ok {
-		return model.Exhibition{}, storage.ErrNotFound
-	}
-	return ex, nil
+func (s *Service) UpdateExhibition(ctx context.Context, ex model.Exhibition) (model.Exhibition, error) {
+	return s.storage.UpdateExhibition(ctx, ex)
 }
 
-func (s *Service) DeleteExhibition(id uuid.UUID) error {
-	if !s.storage.DeleteExhibition(id) {
-		return storage.ErrNotFound
-	}
-	return nil
+func (s *Service) DeleteExhibition(ctx context.Context, id uuid.UUID) error {
+	return s.storage.DeleteExhibition(ctx, id)
 }
 
 // --- Exhibits ---
 
-func (s *Service) CreateExhibit(exhibitionID uuid.UUID, title, description, imageURL string) (model.Exhibit, error) {
-	if !s.storage.ExhibitionExists(exhibitionID) {
-		return model.Exhibit{}, storage.ErrNotFound
+func (s *Service) CreateExhibit(ctx context.Context, e model.Exhibit) (model.Exhibit, error) {
+	if !s.storage.ExhibitionExists(ctx, e.ExhibitionID) {
+		return model.Exhibit{}, fmt.Errorf("exhibition %s: %w", e.ExhibitionID, ErrExhibitionNotFound)
 	}
-	return s.storage.CreateExhibit(exhibitionID, title, description, imageURL), nil
+	return s.storage.CreateExhibit(ctx, e)
 }
 
-func (s *Service) UpdateExhibit(id uuid.UUID, title, description, imageURL string) (model.Exhibit, error) {
-	ex, ok := s.storage.UpdateExhibit(id, title, description, imageURL)
-	if !ok {
-		return model.Exhibit{}, storage.ErrNotFound
-	}
-	return ex, nil
+func (s *Service) UpdateExhibit(ctx context.Context, e model.Exhibit) (model.Exhibit, error) {
+	return s.storage.UpdateExhibit(ctx, e)
 }
 
-func (s *Service) DeleteExhibit(id uuid.UUID) error {
-	if !s.storage.DeleteExhibit(id) {
-		return storage.ErrNotFound
-	}
-	return nil
+func (s *Service) DeleteExhibit(ctx context.Context, id uuid.UUID) error {
+	return s.storage.DeleteExhibit(ctx, id)
 }

@@ -1,4 +1,4 @@
-server host="0.0.0.0" port="8080" {    
+server host="0.0.0.0" port="8080" {
     shutdown_timeout "30s"
     read_timeout "10s"
     write_timeout "30s"
@@ -17,5 +17,15 @@ storage host="localhost" port="5432" {
     name "school_museum"
     user "user"
     pass "password"
-    
+}
+
+telemetry enabled=true {
+    otlp_endpoint "jaeger:4318"
+    service_name "school-museum"
+    umami enabled=true {
+        url "http://umami:3000"
+        username "admin"
+        password "umami"
+        domain "school-museum.local"
+    }
 }

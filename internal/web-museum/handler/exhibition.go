@@ -26,7 +26,10 @@ func (h *Handler) GetAllExhibitions(api huma.API) {
 			Tags:        []string{"Exhibitions"},
 		},
 		func(ctx context.Context, req *struct{}) (*getAllExhibitionsOutput, error) {
-			exhibitions := h.service.GetAllExhibitions()
+			exhibitions, err := h.service.GetAllExhibitions(ctx)
+			if err != nil {
+				return nil, huma.Error500InternalServerError("не удалось получить экспозиции")
+			}
 			return &getAllExhibitionsOutput{Body: exhibitions}, nil
 		},
 	)
@@ -53,8 +56,8 @@ func (h *Handler) GetExhibitionByID(api huma.API) {
 			Tags:        []string{"Exhibitions"},
 		},
 		func(ctx context.Context, req *getExhibitionByIDInput) (*getExhibitionByIDOutput, error) {
-			detail, ok := h.service.GetExhibitionByID(req.ID)
-			if !ok {
+			detail, err := h.service.GetExhibitionByID(ctx, req.ID)
+			if err != nil {
 				return nil, huma.Error404NotFound("экспозиция не найдена")
 			}
 			return &getExhibitionByIDOutput{Body: detail}, nil

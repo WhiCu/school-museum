@@ -2,11 +2,9 @@ package handler
 
 import (
 	"context"
-	"errors"
 	"net/http"
 
 	"github.com/WhiCu/school-museum/db/model"
-	"github.com/WhiCu/school-museum/db/storage"
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/google/uuid"
 )
@@ -44,12 +42,14 @@ func (h *Handler) CreateExhibit(api huma.API) {
 			if req.Body.ExhibitionID == uuid.Nil {
 				return nil, huma.Error400BadRequest("exhibition_id обязателен")
 			}
-			ex, err := h.service.CreateExhibit(req.Body.ExhibitionID, req.Body.Title, req.Body.Description, req.Body.ImageURL)
+			ex, err := h.service.CreateExhibit(ctx, model.Exhibit{
+				ExhibitionID: req.Body.ExhibitionID,
+				Title:        req.Body.Title,
+				Description:  req.Body.Description,
+				ImageURL:     req.Body.ImageURL,
+			})
 			if err != nil {
-				if errors.Is(err, storage.ErrNotFound) {
-					return nil, huma.Error404NotFound("экспозиция не найдена")
-				}
-				return nil, huma.Error500InternalServerError("внутренняя ошибка")
+				return nil, huma.Error500InternalServerError("не удалось создать экспонат")
 			}
 			return &createExhibitOutput{Body: ex}, nil
 		},
@@ -85,12 +85,14 @@ func (h *Handler) UpdateExhibit(api huma.API) {
 			},
 		},
 		func(ctx context.Context, req *updateExhibitInput) (*updateExhibitOutput, error) {
-			ex, err := h.service.UpdateExhibit(req.ID, req.Body.Title, req.Body.Description, req.Body.ImageURL)
+			ex, err := h.service.UpdateExhibit(ctx, model.Exhibit{
+				ID:          req.ID,
+				Title:       req.Body.Title,
+				Description: req.Body.Description,
+				ImageURL:    req.Body.ImageURL,
+			})
 			if err != nil {
-				if errors.Is(err, storage.ErrNotFound) {
-					return nil, huma.Error404NotFound("экспонат не найден")
-				}
-				return nil, huma.Error500InternalServerError("внутренняя ошибка")
+				return nil, huma.Error500InternalServerError("не удалось обновить экспонат")
 			}
 			return &updateExhibitOutput{Body: ex}, nil
 		},
@@ -114,11 +116,8 @@ func (h *Handler) DeleteExhibit(api huma.API) {
 			Tags:        []string{"Admin", "Exhibits"},
 		},
 		func(ctx context.Context, req *deleteExhibitInput) (*struct{}, error) {
-			if err := h.service.DeleteExhibit(req.ID); err != nil {
-				if errors.Is(err, storage.ErrNotFound) {
-					return nil, huma.Error404NotFound("экспонат не найден")
-				}
-				return nil, huma.Error500InternalServerError("внутренняя ошибка")
+			if err := h.service.DeleteExhibit(ctx, req.ID); err != nil {
+				return nil, huma.Error500InternalServerError("не удалось удалить экспонат")
 			}
 			return nil, nil
 		},

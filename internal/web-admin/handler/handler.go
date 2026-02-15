@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/WhiCu/school-museum/db/model"
@@ -8,16 +9,16 @@ import (
 )
 
 type service interface {
-	CreateNews(title, content string) model.News
-	DeleteNews(id uuid.UUID) error
+	CreateNews(ctx context.Context, n model.News) (model.News, error)
+	DeleteNews(ctx context.Context, id uuid.UUID) error
 
-	CreateExhibition(title, description string) model.Exhibition
-	UpdateExhibition(id uuid.UUID, title, description string) (model.Exhibition, error)
-	DeleteExhibition(id uuid.UUID) error
+	CreateExhibition(ctx context.Context, ex model.Exhibition) (model.Exhibition, error)
+	UpdateExhibition(ctx context.Context, ex model.Exhibition) (model.Exhibition, error)
+	DeleteExhibition(ctx context.Context, id uuid.UUID) error
 
-	CreateExhibit(exhibitionID uuid.UUID, title, description, imageURL string) (model.Exhibit, error)
-	UpdateExhibit(id uuid.UUID, title, description, imageURL string) (model.Exhibit, error)
-	DeleteExhibit(id uuid.UUID) error
+	CreateExhibit(ctx context.Context, e model.Exhibit) (model.Exhibit, error)
+	UpdateExhibit(ctx context.Context, e model.Exhibit) (model.Exhibit, error)
+	DeleteExhibit(ctx context.Context, id uuid.UUID) error
 }
 
 type Handler struct {

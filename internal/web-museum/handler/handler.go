@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/WhiCu/school-museum/db/model"
@@ -8,10 +9,10 @@ import (
 )
 
 type service interface {
-	GetAllNews() []model.News
-	GetNewsByID(id uuid.UUID) (model.News, bool)
-	GetAllExhibitions() []model.Exhibition
-	GetExhibitionByID(id uuid.UUID) (model.Exhibition, bool)
+	GetAllNews(ctx context.Context) ([]model.News, error)
+	GetNewsByID(ctx context.Context, id uuid.UUID) (model.News, error)
+	GetAllExhibitions(ctx context.Context) ([]model.Exhibition, error)
+	GetExhibitionByID(ctx context.Context, id uuid.UUID) (model.Exhibition, error)
 }
 
 type Handler struct {

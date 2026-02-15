@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/WhiCu/school-museum/db"
-	"github.com/WhiCu/school-museum/db/model"
 	"github.com/WhiCu/school-museum/db/storage"
 	"github.com/WhiCu/school-museum/internal/config"
+	"github.com/WhiCu/school-museum/internal/telemetry"
 	webadmin "github.com/WhiCu/school-museum/internal/web-admin"
 	webmuseum "github.com/WhiCu/school-museum/internal/web-museum"
 	"github.com/danielgtaylor/huma/v2"
@@ -30,6 +30,7 @@ type App struct {
 	log *slog.Logger
 
 	shutdownTimeout time.Duration
+	telemetry       *telemetry.Provider
 }
 
 func (a *App) gracefulShutdownCtx(ctx context.Context) error {
@@ -53,22 +54,47 @@ func (a *App) gracefulShutdownCtx(ctx context.Context) error {
 }
 
 func (a *App) shutdown(ctx context.Context) (err error) {
+	if a.telemetry != nil {
+		if tErr := a.telemetry.Shutdown(ctx); tErr != nil {
+			a.log.Error("telemetry shutdown error", slog.String("error", tErr.Error()))
+		}
+	}
 	return a.srv.Shutdown(ctx)
 }
 
 func NewApp(ctx context.Context, cfg *config.Config, log *slog.Logger) *App {
-	//TODO: remove
+	app := &App{
+		log:             log,
+		shutdownTimeout: cfg.Server.ShutdownTimeout,
+	}
 
-	db, err := db.NewDB(ctx, cfg.Storage.DSN())
+	// ----- Telemetry (OTLP) -----
+	if cfg.Telemetry.Enabled && cfg.Telemetry.OTLPEndpoint != "" {
+		tp, err := telemetry.InitOTLP(ctx, cfg.Telemetry.OTLPEndpoint, cfg.Telemetry.ServiceName, log.WithGroup("telemetry"))
+		if err != nil {
+			log.Error("failed to init OTLP telemetry, continuing without it", slog.String("error", err.Error()))
+		} else {
+			app.telemetry = tp
+		}
+	}
+
+	// ----- Database -----
+	dbOpts := []db.Option{db.WithDebug(true)}
+	if app.telemetry != nil {
+		dbOpts = append(dbOpts, db.WithOtel())
+	}
+
+	database, err := db.NewDB(ctx, cfg.Storage.DSN(), dbOpts...)
 	if err != nil {
 		log.Error("failed to create database connection", slog.String("error", err.Error()))
 		panic(err)
 	}
 
-	news := storage.NewNewsStorage(db)
-	exhibits := storage.NewExhibitStorage(db)
-	exhibitions := storage.Storage[model.Exhibition](nil)
+	news := storage.NewNewsStorage(database)
+	exhibits := storage.NewExhibitStorage(database)
+	exhibitions := storage.NewExhibitionStorage(database)
 
+	// ----- Router -----
 	r := bunrouter.New(
 		bunrouter.Use(bunrouterotel.NewMiddleware(
 			bunrouterotel.WithClientIP(),
@@ -78,26 +104,43 @@ func NewApp(ctx context.Context, cfg *config.Config, log *slog.Logger) *App {
 	api := humabunrouter.New(r, huma.DefaultConfig("school-museum", "0.1.0"))
 	pingHandler(api)
 
-	// r.Mount("/museum", webmuseum.NewHandler(s, log.WithGroup("web-museum")))
 	museum := huma.NewGroup(api, "/museum")
 	webmuseum.RegisterHandlers(
 		museum, news, exhibitions, exhibits, log.WithGroup("web-museum"))
 
-	// r.Mount("/admin", webadmin.NewHandler(s, log.WithGroup("web-admin")))
 	admin := huma.NewGroup(api, "/admin")
 	webadmin.RegisterHandlers(
 		admin, news, exhibitions, exhibits, log.WithGroup("web-admin"))
 
-	return &App{
-		srv: http.Server{
-			Handler:      otelhttp.NewHandler(r, "school-museum-api"),
-			Addr:         cfg.Server.ServerAddr(),
-			ReadTimeout:  cfg.Server.ReadTimeout,
-			WriteTimeout: cfg.Server.WriteTimeout,
-			IdleTimeout:  cfg.Server.IdleTimeout,
-		},
-		log: log,
+	// ----- HTTP handler chain -----
+	var handler http.Handler = otelhttp.NewHandler(r, "school-museum-api")
+
+	// Umami analytics middleware
+	if cfg.Telemetry.Umami.Enabled && cfg.Telemetry.Umami.URL != "" {
+		umami, err := telemetry.NewUmamiClient(ctx, telemetry.UmamiOpts{
+			URL:       cfg.Telemetry.Umami.URL,
+			WebsiteID: cfg.Telemetry.Umami.WebsiteID,
+			Username:  cfg.Telemetry.Umami.Username,
+			Password:  cfg.Telemetry.Umami.Password,
+			Domain:    cfg.Telemetry.Umami.Domain,
+		}, log.WithGroup("umami"))
+		if err != nil {
+			log.Error("failed to init umami client, continuing without it", slog.String("error", err.Error()))
+		} else {
+			handler = umami.Middleware(handler)
+			log.Info("umami analytics enabled", slog.String("url", cfg.Telemetry.Umami.URL))
+		}
 	}
+
+	app.srv = http.Server{
+		Handler:      handler,
+		Addr:         cfg.Server.ServerAddr(),
+		ReadTimeout:  cfg.Server.ReadTimeout,
+		WriteTimeout: cfg.Server.WriteTimeout,
+		IdleTimeout:  cfg.Server.IdleTimeout,
+	}
+
+	return app
 }
 
 func (a *App) Run(ctx context.Context) error {

@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/WhiCu/school-museum/db/model"
@@ -20,30 +21,46 @@ func NewStorage(news storage.Storage[model.News], exhibitions storage.Storage[mo
 		News:        news,
 		Exhibitions: exhibitions,
 		Exhibits:    exhibits,
-		log:         log}
+		log:         log,
+	}
 }
 
-func (s *Storage) GetAllNews() []model.News {
-	// return s.store.News.GetAll()
-	return []model.News{}
+// --- News ---
+
+func (s *Storage) GetAllNews(ctx context.Context) ([]model.News, error) {
+	news, err := s.News.List(ctx)
+	if err != nil {
+		s.log.Error("failed to get all news", slog.String("error", err.Error()))
+		return nil, err
+	}
+	return news, nil
 }
 
-func (s *Storage) GetNewsByID(id uuid.UUID) (model.News, bool) {
-	// return s.store.News.GetByID(id)
-	return model.News{}, false
+func (s *Storage) GetNewsByID(ctx context.Context, id uuid.UUID) (model.News, error) {
+	n, err := s.News.Read(ctx, id)
+	if err != nil {
+		s.log.Error("failed to get news by id", slog.String("id", id.String()), slog.String("error", err.Error()))
+		return model.News{}, err
+	}
+	return n, nil
 }
 
-func (s *Storage) GetAllExhibitions() []model.Exhibition {
-	// return s.store.Exhibitions.GetAll()
-	return []model.Exhibition{}
+// --- Exhibitions ---
+
+func (s *Storage) GetAllExhibitions(ctx context.Context) ([]model.Exhibition, error) {
+	exhibitions, err := s.Exhibitions.List(ctx)
+	if err != nil {
+		s.log.Error("failed to get all exhibitions", slog.String("error", err.Error()))
+		return nil, err
+	}
+	return exhibitions, nil
 }
 
-func (s *Storage) GetExhibitionByID(id uuid.UUID) (model.Exhibition, bool) {
-	// return s.store.Exhibitions.GetByID(id)
-	return model.Exhibition{}, false
-}
-
-func (s *Storage) GetExhibitsByExhibitionID(exhibitionID uuid.UUID) []model.Exhibit {
-	// return s.store.Exhibits.GetByExhibitionID(exhibitionID)
-	return []model.Exhibit{}
+func (s *Storage) GetExhibitionByID(ctx context.Context, id uuid.UUID) (model.Exhibition, error) {
+	ex, err := s.Exhibitions.Read(ctx, id)
+	if err != nil {
+		s.log.Error("failed to get exhibition by id", slog.String("id", id.String()), slog.String("error", err.Error()))
+		return model.Exhibition{}, err
+	}
+	return ex, nil
 }

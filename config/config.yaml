@@ -20,5 +20,16 @@ storage:
   host: "localhost"
   port: "5432"
   user: "user"
-  password: "password"
-  db: "l0_test"
+  pass: "password"
+  name: "school_museum"
+
+telemetry:
+  enabled: false
+  otlp_endpoint: "localhost:4318"
+  service_name: "school-museum"
+  umami:
+    enabled: false
+    url: "http://localhost:3000"
+    username: "admin"
+    password: "umami"
+    domain: "localhost"

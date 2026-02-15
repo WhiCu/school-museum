@@ -26,7 +26,10 @@ func (h *Handler) GetAllNews(api huma.API) {
 			Tags:        []string{"News"},
 		},
 		func(ctx context.Context, req *struct{}) (*getAllNewsOutput, error) {
-			news := h.service.GetAllNews()
+			news, err := h.service.GetAllNews(ctx)
+			if err != nil {
+				return nil, huma.Error500InternalServerError("не удалось получить новости")
+			}
 			return &getAllNewsOutput{Body: news}, nil
 		},
 	)
@@ -53,8 +56,8 @@ func (h *Handler) GetNewsByID(api huma.API) {
 			Tags:        []string{"News"},
 		},
 		func(ctx context.Context, req *getNewsByIDInput) (*getNewsByIDOutput, error) {
-			n, ok := h.service.GetNewsByID(req.ID)
-			if !ok {
+			n, err := h.service.GetNewsByID(ctx, req.ID)
+			if err != nil {
 				return nil, huma.Error404NotFound("новость не найдена")
 			}
 			return &getNewsByIDOutput{Body: n}, nil

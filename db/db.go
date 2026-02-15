@@ -9,16 +9,38 @@ import (
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"github.com/uptrace/bun/extra/bundebug"
+	"github.com/uptrace/bun/extra/bunotel"
 )
 
-func NewDB(ctx context.Context, dsn string) (db *bun.DB, err error) {
+type Option func(*bun.DB)
+
+// WithOtel добавляет OpenTelemetry хук для трейсинга SQL-запросов.
+func WithOtel() Option {
+	return func(db *bun.DB) {
+		db.AddQueryHook(bunotel.NewQueryHook(
+			bunotel.WithFormattedQueries(true),
+		))
+	}
+}
+
+// WithDebug добавляет debug-хук для логирования SQL-запросов в stdout.
+func WithDebug(verbose bool) Option {
+	return func(db *bun.DB) {
+		db.AddQueryHook(bundebug.NewQueryHook(
+			bundebug.WithVerbose(verbose),
+		))
+	}
+}
+
+func NewDB(ctx context.Context, dsn string, opts ...Option) (db *bun.DB, err error) {
 	sqldb := sql.OpenDB(pgdriver.NewConnector(
 		pgdriver.WithDSN(dsn),
 	))
 	db = bun.NewDB(sqldb, pgdialect.New())
-	db.AddQueryHook(bundebug.NewQueryHook(
-		bundebug.WithVerbose(true),
-	))
+
+	for _, opt := range opts {
+		opt(db)
+	}
 
 	_, err = db.NewCreateTable().
 		Model((*model.News)(nil)).

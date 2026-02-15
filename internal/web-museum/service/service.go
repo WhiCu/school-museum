@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/WhiCu/school-museum/db/model"
@@ -8,11 +9,10 @@ import (
 )
 
 type Storage interface {
-	GetAllNews() []model.News
-	GetNewsByID(id uuid.UUID) (model.News, bool)
-	GetAllExhibitions() []model.Exhibition
-	GetExhibitionByID(id uuid.UUID) (model.Exhibition, bool)
-	GetExhibitsByExhibitionID(exhibitionID uuid.UUID) []model.Exhibit
+	GetAllNews(ctx context.Context) ([]model.News, error)
+	GetNewsByID(ctx context.Context, id uuid.UUID) (model.News, error)
+	GetAllExhibitions(ctx context.Context) ([]model.Exhibition, error)
+	GetExhibitionByID(ctx context.Context, id uuid.UUID) (model.Exhibition, error)
 }
 
 type Service struct {
@@ -27,26 +27,18 @@ func NewService(storage Storage, log *slog.Logger) *Service {
 	}
 }
 
-func (s *Service) GetAllNews() []model.News {
-	return s.storage.GetAllNews()
+func (s *Service) GetAllNews(ctx context.Context) ([]model.News, error) {
+	return s.storage.GetAllNews(ctx)
 }
 
-func (s *Service) GetNewsByID(id uuid.UUID) (model.News, bool) {
-	return s.storage.GetNewsByID(id)
+func (s *Service) GetNewsByID(ctx context.Context, id uuid.UUID) (model.News, error) {
+	return s.storage.GetNewsByID(ctx, id)
 }
 
-func (s *Service) GetAllExhibitions() []model.Exhibition {
-	return s.storage.GetAllExhibitions()
+func (s *Service) GetAllExhibitions(ctx context.Context) ([]model.Exhibition, error) {
+	return s.storage.GetAllExhibitions(ctx)
 }
 
-func (s *Service) GetExhibitionByID(id uuid.UUID) (model.Exhibition, bool) {
-	ex, ok := s.storage.GetExhibitionByID(id)
-	if !ok {
-		return model.Exhibition{}, false
-	}
-	exhibits := s.storage.GetExhibitsByExhibitionID(id)
-	if exhibits == nil {
-		exhibits = []model.Exhibit{}
-	}
-	return ex, true
+func (s *Service) GetExhibitionByID(ctx context.Context, id uuid.UUID) (model.Exhibition, error) {
+	return s.storage.GetExhibitionByID(ctx, id)
 }

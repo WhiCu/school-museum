@@ -1,52 +1,69 @@
 package telemetry
 
 import (
-	"bytes"
-	"encoding/json"
-	"net/http"
+	"context"
+	"log/slog"
+	"time"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 )
 
-type UmamiClient struct {
-	URL       string
-	WebsiteID string
+// Provider хранит провайдер трейсов для корректного shutdown.
+type Provider struct {
+	tp *sdktrace.TracerProvider
 }
 
-func NewUmami(url, websiteID string) *UmamiClient {
-	return &UmamiClient{URL: url, WebsiteID: websiteID}
+// InitOTLP инициализирует OTLP trace провайдер.
+// endpoint — адрес коллектора (например "jaeger:4318" или "localhost:4318").
+func InitOTLP(ctx context.Context, endpoint, serviceName string, log *slog.Logger) (*Provider, error) {
+	res, err := resource.New(ctx,
+		resource.WithAttributes(
+			semconv.ServiceNameKey.String(serviceName),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// ----- Traces -----
+	traceExp, err := otlptracehttp.New(ctx,
+		otlptracehttp.WithEndpoint(endpoint),
+		otlptracehttp.WithInsecure(),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(traceExp, sdktrace.WithBatchTimeout(5*time.Second)),
+		sdktrace.WithResource(res),
+	)
+	otel.SetTracerProvider(tp)
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(
+		propagation.TraceContext{},
+		propagation.Baggage{},
+	))
+
+	log.Info("OTLP telemetry initialized",
+		slog.String("endpoint", endpoint),
+		slog.String("service", serviceName),
+	)
+
+	return &Provider{tp: tp}, nil
 }
 
-func (u *UmamiClient) Track(r *http.Request, title string) {
-	go func() {
-		// Извлекаем IP из заголовков (порядок важен)
-		ip := r.Header.Get("X-Forwarded-For")
-		if ip == "" {
-			ip = r.Header.Get("X-Real-IP")
-		}
-		if ip == "" {
-			ip = r.RemoteAddr
-		}
-
-		payload := map[string]interface{}{
-			"type": "event",
-			"payload": map[string]interface{}{
-				"website":   u.WebsiteID,
-				"url":       r.URL.Path,
-				"hostname":  r.Host,
-				"title":     title,
-				"language":  r.Header.Get("Accept-Language"),
-				"referrer":  r.Referer(),
-				"screen":    "1920x1080",   // можно сделать конфигурируемым
-				"ip":        ip,            // ← передаём IP в payload [citation:4]
-				"userAgent": r.UserAgent(), // ← User-Agent в payload [citation:4]
-			},
-		}
-
-		// Важно: НЕ передаём эти заголовки в HTTP-запросе!
-		body, _ := json.Marshal(payload)
-		req, _ := http.NewRequest("POST", u.URL+"/api/send", bytes.NewBuffer(body))
-		req.Header.Set("Content-Type", "application/json")
-		// User-Agent и X-Forwarded-For убираем!
-
-		http.DefaultClient.Do(req)
-	}()
+// Shutdown корректно завершает работу провайдера.
+func (p *Provider) Shutdown(ctx context.Context) error {
+	if p == nil {
+		return nil
+	}
+	if p.tp != nil {
+		return p.tp.Shutdown(ctx)
+	}
+	return nil
 }

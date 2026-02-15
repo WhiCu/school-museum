@@ -15,18 +15,20 @@ type Exhibit struct {
 	Description   string    `json:"description" bun:"description"`
 	ImageURL      string    `json:"image_url" bun:"image_url"`
 
-	CreatedAt time.Time `bun:",nullzero,notnull,default:current_timestamp"`
-	UpdatedAt time.Time `bun:",nullzero,notnull,default:current_timestamp"`
-	DeletedAt time.Time `bun:",soft_delete,nullzero"`
+	CreatedAt time.Time `json:"created_at" bun:",nullzero,notnull,default:current_timestamp"`
+	UpdatedAt time.Time `json:"updated_at" bun:",nullzero,notnull,default:current_timestamp"`
+	DeletedAt time.Time `json:"-" bun:",soft_delete,nullzero"`
 }
 
 type Exhibition struct {
+	bun.BaseModel `bun:"table:exhibitions,alias:ex"`
+
 	ID          uuid.UUID `json:"id" bun:"id,pk,type:uuid,default:uuid_generate_v4()"`
 	Title       string    `json:"title" bun:"title"`
 	Description string    `json:"description" bun:"description"`
-	Exhibit     []Exhibit `bun:"rel:has-many,join:id=exhibition_id"`
+	Exhibits    []Exhibit `json:"exhibits,omitempty" bun:"rel:has-many,join:id=exhibition_id"`
 
-	CreatedAt time.Time `bun:",nullzero,notnull,default:current_timestamp"`
-	UpdatedAt time.Time `bun:",nullzero,notnull,default:current_timestamp"`
-	DeletedAt time.Time `bun:",soft_delete,nullzero"`
+	CreatedAt time.Time `json:"created_at" bun:",nullzero,notnull,default:current_timestamp"`
+	UpdatedAt time.Time `json:"updated_at" bun:",nullzero,notnull,default:current_timestamp"`
+	DeletedAt time.Time `json:"-" bun:",soft_delete,nullzero"`
 }

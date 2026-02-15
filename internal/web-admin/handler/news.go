@@ -2,11 +2,9 @@ package handler
 
 import (
 	"context"
-	"errors"
 	"net/http"
 
 	"github.com/WhiCu/school-museum/db/model"
-	"github.com/WhiCu/school-museum/db/storage"
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/google/uuid"
 )
@@ -14,8 +12,9 @@ import (
 // CreateNews - создание новой новости.
 type createNewsInput struct {
 	Body struct {
-		Title   string `json:"title" minLength:"1" doc:"Заголовок новости"`
-		Content string `json:"content" doc:"Содержание новости"`
+		Title    string `json:"title" minLength:"1" doc:"Заголовок новости"`
+		Content  string `json:"content" doc:"Содержание новости"`
+		ImageURL string `json:"image_url" doc:"URL изображения новости"`
 	}
 }
 
@@ -35,7 +34,14 @@ func (h *Handler) CreateNews(api huma.API) {
 			Tags:        []string{"Admin", "News"},
 		},
 		func(ctx context.Context, req *createNewsInput) (*createNewsOutput, error) {
-			n := h.service.CreateNews(req.Body.Title, req.Body.Content)
+			n, err := h.service.CreateNews(ctx, model.News{
+				Title:    req.Body.Title,
+				Content:  req.Body.Content,
+				ImageURL: req.Body.ImageURL,
+			})
+			if err != nil {
+				return nil, huma.Error500InternalServerError("не удалось создать новость")
+			}
 			return &createNewsOutput{Body: n}, nil
 		},
 	)
@@ -60,11 +66,8 @@ func (h *Handler) DeleteNews(api huma.API) {
 			},
 		},
 		func(ctx context.Context, req *deleteNewsInput) (*struct{}, error) {
-			if err := h.service.DeleteNews(req.ID); err != nil {
-				if errors.Is(err, storage.ErrNotFound) {
-					return nil, huma.Error404NotFound("новость не найдена")
-				}
-				return nil, huma.Error500InternalServerError("внутренняя ошибка")
+			if err := h.service.DeleteNews(ctx, req.ID); err != nil {
+				return nil, huma.Error500InternalServerError("не удалось удалить новость")
 			}
 			return nil, nil
 		},
