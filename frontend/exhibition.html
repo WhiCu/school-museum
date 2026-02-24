@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Экспозиция - Музей лицея №76</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="header">
+        <nav class="nav">
+            <div class="nav-item dropdown">
+                <span>МУЗЕЙ</span>
+                <span class="dropdown-arrow">▼</span>
+            </div>
+            <a href="#" class="nav-item">КУПИТЬ БИЛЕТЫ</a>
+            <div class="nav-item dropdown">
+                <span>ПОСЕТИТЕЛЯМ</span>
+                <span class="dropdown-arrow">▼</span>
+            </div>
+            <div class="nav-item dropdown">
+                <span>ТУРФИРМАМ</span>
+                <span class="dropdown-arrow">▼</span>
+            </div>
+            <a href="#" class="nav-item">ПУШКИНСКАЯ КАРТА</a>
+            <span class="nav-item">...</span>
+            <button class="search-btn">🔍</button>
+        </nav>
+    </header>
+
+    <main>
+        <section class="exhibition-hero">
+            <div class="exhibition-header">
+                <div class="exhibition-preview">
+                    <p class="exhibition-note">здесь должна быть страничка "живой истории", которую сделает другое направление служения</p>
+                    <p class="exhibition-description-text">эта страничка будет оглавлять экспозицию<br>на ней должна быть анимированная фотка или 3д модель, анимация стартует при наведении</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="exhibition-description-section">
+            <div class="container">
+                <div class="description-block" id="exhibition-description">
+                    <h2>Блок описания экспозиции</h2>
+                    <p>Загрузка...</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="exhibits-section">
+            <div class="container">
+                <div class="exhibits-grid" id="exhibits-grid">
+                    <!-- Экспонаты загружаются через JS -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Музей лицея №76. Все права защищены.</p>
+        </div>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script src="js/exhibition.js"></script>
+</body>
+</html>

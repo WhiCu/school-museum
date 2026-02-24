@@ -115,6 +115,9 @@ func NewApp(ctx context.Context, cfg *config.Config, log *slog.Logger) *App {
 	// ----- HTTP handler chain -----
 	var handler http.Handler = otelhttp.NewHandler(r, "school-museum-api")
 
+	// CORS middleware
+	handler = corsMiddleware(handler)
+
 	// Umami analytics middleware
 	if cfg.Telemetry.Umami.Enabled && cfg.Telemetry.Umami.URL != "" {
 		umami, err := telemetry.NewUmamiClient(ctx, telemetry.UmamiOpts{
@@ -141,6 +144,22 @@ func NewApp(ctx context.Context, cfg *config.Config, log *slog.Logger) *App {
 	}
 
 	return app
+}
+
+// corsMiddleware adds CORS headers to allow cross-origin requests from the frontend.
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func (a *App) Run(ctx context.Context) error {

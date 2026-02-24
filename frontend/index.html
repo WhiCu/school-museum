@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Музей лицея №76</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="header">
+        <nav class="nav">
+            <div class="nav-item dropdown">
+                <span>МУЗЕЙ</span>
+                <span class="dropdown-arrow">▼</span>
+            </div>
+            <a href="#" class="nav-item">КУПИТЬ БИЛЕТЫ</a>
+            <div class="nav-item dropdown">
+                <span>ПОСЕТИТЕЛЯМ</span>
+                <span class="dropdown-arrow">▼</span>
+            </div>
+            <div class="nav-item dropdown">
+                <span>ТУРФИРМАМ</span>
+                <span class="dropdown-arrow">▼</span>
+            </div>
+            <a href="#" class="nav-item">ПУШКИНСКАЯ КАРТА</a>
+            <span class="nav-item">...</span>
+            <button class="search-btn">🔍</button>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Сайт музея лицея №76</h1>
+        </section>
+
+        <section class="description">
+            <div class="container">
+                <h2>Описание</h2>
+                <p>Добро пожаловать в музей лицея №76. Здесь собраны уникальные экспонаты, отражающие историю нашего учебного заведения.</p>
+            </div>
+        </section>
+
+        <section class="news-section">
+            <div class="container">
+                <h2>Новости</h2>
+                <div id="news-container" class="news-grid">
+                    <!-- Новости загружаются через JS -->
+                </div>
+            </div>
+        </section>
+
+        <section class="exhibitions-section">
+            <div class="container">
+                <h2>Экспозиции</h2>
+                <div class="exhibitions-carousel">
+                    <button class="carousel-btn prev" onclick="prevExhibition()">◄</button>
+                    <div class="exhibition-card" id="exhibition-card">
+                        <div class="exhibition-info">
+                            <p class="exhibition-note">здесь должна быть страничка "живой истории", которую сделает другое направление служения</p>
+                            <p class="exhibition-description">эта страничка будет оглавлять экспозицию<br>на ней должна быть анимированная фотка или 3д модель, анимация стартует при наведении</p>
+                        </div>
+                    </div>
+                    <button class="carousel-btn next" onclick="nextExhibition()">►</button>
+                </div>
+                <div class="carousel-dots" id="carousel-dots">
+                    <!-- Точки навигации добавляются через JS -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Музей лицея №76. Все права защищены.</p>
+        </div>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

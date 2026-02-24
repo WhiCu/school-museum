@@ -15,11 +15,7 @@ COPY db db
 # RUN go build -o /out/app ./cmd/app
 
 RUN CGO_ENABLED=0 \
-    go build -trimpath -ldflags "-s -w" -o /out/{{.APP_NAME}} .
-
-# ENV PATH_CONFIG=/src/config/config.yaml
-
-# ENTRYPOINT ["/out/app"]
+    go build -trimpath -ldflags "-s -w" -o /out/school-museum .
 
 
 # Runtime
@@ -27,7 +23,7 @@ FROM alpine:3.23.3 AS runtime
 
 WORKDIR /src
 
-COPY --from=builder /out/{{.APP_NAME}} /src/{{.APP_NAME}}
+COPY --from=builder /out/school-museum /src/school-museum
 
 COPY config/ /src/config/
 
@@ -35,4 +31,4 @@ EXPOSE 8080
 
 ENV PATH_CONFIG=/src/config/config.kdl
 
-ENTRYPOINT ["/src/{{.APP_NAME}}", "-t", "kdl"]
+ENTRYPOINT ["/src/school-museum", "-t", "kdl"]
