@@ -7,48 +7,56 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #fff;
-    color: #333;
-    line-height: 1.6;
+    background-color: #faf9f7;
+    color: #3a3a3a;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1100px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 24px;
 }
 
 /* Header и Navigation */
 .header {
-    background-color: #8b7355;
+    background-color: #7a6548;
     position: sticky;
     top: 0;
     z-index: 100;
+    box-shadow: 0 1px 8px rgba(80, 60, 30, 0.18);
 }
 
 .nav {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 15px 20px;
-    gap: 30px;
+    padding: 0 24px;
+    gap: 8px;
     flex-wrap: wrap;
+    min-height: 52px;
 }
 
 .nav-item {
-    color: #fff;
+    color: rgba(255,255,255,0.88);
     text-decoration: none;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
+    letter-spacing: 0.4px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 5px;
-    transition: opacity 0.3s;
+    gap: 4px;
+    padding: 14px 14px;
+    transition: color 0.2s, background 0.2s;
+    border-radius: 0;
+    position: relative;
 }
 
 .nav-item:hover {
-    opacity: 0.8;
+    color: #fff;
+    background: rgba(255,255,255,0.08);
 }
 
 .dropdown {
@@ -56,181 +64,201 @@ body {
 }
 
 .dropdown-arrow {
-    font-size: 10px;
+    font-size: 9px;
+    opacity: 0.6;
 }
 
 .search-btn {
     background: none;
     border: none;
-    color: #fff;
-    font-size: 18px;
+    color: rgba(255,255,255,0.8);
+    font-size: 16px;
     cursor: pointer;
-    transition: opacity 0.3s;
+    padding: 14px 10px;
+    transition: color 0.2s;
 }
 
 .search-btn:hover {
-    opacity: 0.8;
+    color: #fff;
 }
 
 /* Hero секция главной страницы */
 .hero {
-    background-color: #1a1a1a;
+    background-color: #1c1c1c;
+    background-image: linear-gradient(160deg, #1c1c1c 0%, #2a2520 100%);
     color: #fff;
-    padding: 80px 20px;
+    padding: 72px 24px;
     text-align: center;
-    min-height: 300px;
+    min-height: 260px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .hero h1 {
-    font-size: 48px;
-    font-weight: 400;
+    font-size: 42px;
+    font-weight: 300;
+    letter-spacing: -0.5px;
 }
 
 /* Описание */
 .description {
-    background-color: #f5f5f5;
-    border: 2px solid #333;
-    margin: 0;
+    background-color: #fff;
+    border-bottom: 1px solid #e8e4de;
 }
 
 .description .container {
-    padding: 40px 20px;
+    padding: 48px 24px;
 }
 
 .description h2 {
-    font-size: 36px;
+    font-size: 28px;
     font-weight: 400;
-    margin-bottom: 20px;
+    margin-bottom: 14px;
+    color: #5a4a3a;
 }
 
 .description p {
-    font-size: 18px;
-    color: #666;
+    font-size: 16px;
+    color: #6b6b6b;
+    max-width: 680px;
+    line-height: 1.8;
 }
 
 /* Новости */
 .news-section {
-    background-color: #e0e0e0;
-    border: 2px solid #333;
-    border-top: none;
+    background-color: #f3f1ed;
+    border-bottom: 1px solid #e0dbd3;
 }
 
 .news-section .container {
-    padding: 40px 20px;
+    padding: 48px 24px;
 }
 
 .news-section h2 {
-    font-size: 32px;
+    font-size: 28px;
     font-weight: 400;
-    margin-bottom: 30px;
+    margin-bottom: 28px;
     text-align: center;
+    color: #5a4a3a;
 }
 
 .news-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 22px;
 }
 
 .news-card {
     background: #fff;
-    border: 1px solid #ccc;
-    padding: 20px;
-    border-radius: 4px;
+    border: 1px solid #e4dfd7;
+    padding: 22px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: box-shadow 0.25s, transform 0.25s;
+}
+
+.news-card:hover {
+    box-shadow: 0 6px 24px rgba(100, 80, 50, 0.1);
+    transform: translateY(-2px);
 }
 
 .news-image {
-    width: 100%;
-    height: 180px;
+    width: calc(100% + 44px);
+    height: 170px;
     object-fit: cover;
-    border-radius: 4px 4px 0 0;
-    margin: -20px -20px 15px -20px;
-    width: calc(100% + 40px);
+    border-radius: 10px 10px 0 0;
+    margin: -22px -22px 18px -22px;
 }
 
 .news-card h3 {
-    font-size: 18px;
-    margin-bottom: 10px;
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #3a3a3a;
+    line-height: 1.4;
 }
 
 .news-card p {
     font-size: 14px;
-    color: #666;
+    color: #777;
+    line-height: 1.6;
 }
 
 .news-card .news-date {
     font-size: 12px;
-    color: #999;
-    margin-top: 10px;
+    color: #aaa;
+    margin-top: 12px;
 }
 
 /* Экспозиции карусель */
 .exhibitions-section {
-    padding: 40px 0;
-    border: 2px dashed #333;
-    border-top: 2px solid #333;
-    margin-top: -2px;
+    padding: 52px 0;
+    background: #fff;
+    border-top: 1px solid #e8e4de;
 }
 
 .exhibitions-section h2 {
-    font-size: 32px;
+    font-size: 28px;
     font-weight: 400;
     margin-bottom: 30px;
     text-align: center;
+    color: #5a4a3a;
 }
 
 .exhibitions-carousel {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 30px;
-    padding: 20px;
+    gap: 24px;
+    padding: 0 24px;
 }
 
 .carousel-btn {
-    background: none;
-    border: 2px solid #333;
-    width: 60px;
-    height: 60px;
-    font-size: 24px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid #d0c8bc;
+    background: #fff;
+    font-size: 18px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
+    color: #8b7355;
+    flex-shrink: 0;
+    clip-path: none;
 }
 
 .carousel-btn:hover {
-    background-color: #f0f0f0;
+    background: #f5f0e8;
+    border-color: #8b7355;
+    box-shadow: 0 2px 8px rgba(100, 80, 50, 0.12);
 }
 
-.carousel-btn.prev {
-    clip-path: polygon(100% 0, 100% 100%, 0 50%);
-    border: none;
-    background-color: #ddd;
-}
-
+.carousel-btn.prev,
 .carousel-btn.next {
-    clip-path: polygon(0 0, 100% 50%, 0 100%);
-    border: none;
-    background-color: #ddd;
+    clip-path: none;
+    border: 1px solid #d0c8bc;
+    background: #fff;
 }
 
 .exhibition-card {
-    border: 2px solid #333;
-    padding: 40px;
-    max-width: 600px;
-    min-height: 200px;
+    border: 1px solid #d8d0c4;
+    border-radius: 10px;
+    padding: 36px 32px;
+    max-width: 560px;
+    width: 100%;
+    min-height: 180px;
     cursor: pointer;
-    transition: transform 0.3s, box-shadow 0.3s;
+    transition: box-shadow 0.3s, transform 0.25s;
+    background: #fff;
 }
 
 .exhibition-card:hover {
-    transform: scale(1.02);
-    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(100, 80, 50, 0.12);
 }
 
 .exhibition-info {
@@ -238,43 +266,50 @@ body {
 }
 
 .exhibition-note {
-    font-size: 16px;
-    margin-bottom: 20px;
-    color: #333;
+    font-size: 15px;
+    margin-bottom: 16px;
+    color: #555;
+    line-height: 1.6;
 }
 
 .exhibition-description {
-    font-size: 14px;
-    color: #c00;
-    line-height: 1.8;
+    font-size: 13px;
+    color: #a0522d;
+    line-height: 1.7;
+    opacity: 0.85;
 }
 
 .exhibition-title {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 600;
-    margin-bottom: 15px;
-    color: #333;
+    margin-bottom: 12px;
+    color: #3a3a3a;
 }
 
 .exhibition-text {
-    font-size: 16px;
-    color: #666;
+    font-size: 15px;
+    color: #777;
+    line-height: 1.7;
 }
 
 .carousel-dots {
     display: flex;
     justify-content: center;
-    gap: 10px;
-    margin-top: 20px;
+    gap: 8px;
+    margin-top: 24px;
 }
 
 .dot {
-    width: 12px;
-    height: 12px;
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
-    background-color: #ccc;
+    background-color: #d4cdc2;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.dot:hover {
+    transform: scale(1.3);
 }
 
 .dot.active {
@@ -283,7 +318,7 @@ body {
 
 /* Страница экспозиции */
 .exhibition-hero {
-    padding: 40px 20px;
+    padding: 40px 24px;
 }
 
 .exhibition-header {
@@ -292,16 +327,18 @@ body {
 }
 
 .exhibition-preview {
-    border: 2px solid #333;
-    padding: 30px;
+    border: 1px solid #d8d0c4;
+    border-radius: 10px;
+    padding: 32px;
     background: #fff;
 }
 
 .exhibition-description-text {
-    font-size: 14px;
-    color: #c00;
-    margin-top: 15px;
+    font-size: 13px;
+    color: #a0522d;
+    margin-top: 14px;
     line-height: 1.8;
+    opacity: 0.85;
 }
 
 .exhibition-description-section {
@@ -309,20 +346,25 @@ body {
 }
 
 .description-block {
-    border: 2px solid #333;
-    padding: 30px;
+    border: 1px solid #d8d0c4;
+    border-radius: 10px;
+    padding: 32px;
     max-width: 800px;
     margin: 0 auto;
+    background: #fff;
 }
 
 .description-block h2 {
-    font-size: 24px;
-    margin-bottom: 15px;
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #5a4a3a;
 }
 
 .description-block p {
-    font-size: 16px;
-    color: #666;
+    font-size: 15px;
+    color: #6b6b6b;
+    line-height: 1.8;
 }
 
 /* Сетка экспонатов */
@@ -332,32 +374,34 @@ body {
 
 .exhibits-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 30px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 24px;
     max-width: 900px;
     margin: 0 auto;
 }
 
 .exhibit-card {
-    border: 2px solid #333;
+    border: 1px solid #e0dbd3;
+    border-radius: 10px;
     background: #fff;
+    overflow: hidden;
     transition: transform 0.3s, box-shadow 0.3s;
     cursor: pointer;
 }
 
 .exhibit-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 28px rgba(100, 80, 50, 0.13);
 }
 
 .exhibit-image {
     width: 100%;
-    height: 180px;
+    height: 170px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f9f9f9;
-    border-bottom: 2px solid #333;
+    background: #f5f3ef;
+    border-bottom: 1px solid #e8e4de;
 }
 
 .exhibit-image img {
@@ -367,64 +411,75 @@ body {
 }
 
 .exhibit-placeholder {
-    font-size: 60px;
-    color: #c00;
+    font-size: 48px;
+    opacity: 0.35;
 }
 
 .exhibit-info {
-    padding: 15px;
+    padding: 16px 18px;
 }
 
 .exhibit-title {
-    font-size: 16px;
-    font-weight: 500;
-    margin-bottom: 10px;
-    color: #333;
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #3a3a3a;
 }
 
 .exhibit-description-box {
-    border: 1px solid #333;
-    padding: 10px;
-    font-size: 14px;
-    color: #666;
+    border: none;
+    background: #f8f6f3;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: #777;
+    line-height: 1.6;
 }
 
 /* Footer */
 .footer {
-    background-color: #333;
-    color: #fff;
-    padding: 30px 20px;
+    background-color: #2c2822;
+    color: rgba(255,255,255,0.65);
+    padding: 28px 24px;
     text-align: center;
-    margin-top: 50px;
+    margin-top: 0;
 }
 
 .footer p {
-    font-size: 14px;
+    font-size: 13px;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
     .nav {
-        gap: 15px;
+        gap: 4px;
         font-size: 12px;
     }
-    
+
+    .nav-item {
+        padding: 12px 10px;
+        font-size: 12px;
+    }
+
     .hero h1 {
-        font-size: 32px;
+        font-size: 28px;
     }
-    
+
     .exhibitions-carousel {
-        flex-direction: column;
+        gap: 12px;
     }
-    
+
     .carousel-btn {
-        display: none;
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
     }
-    
+
     .exhibition-card {
         max-width: 100%;
+        padding: 24px 20px;
     }
-    
+
     .exhibits-grid {
         grid-template-columns: 1fr;
     }
@@ -434,7 +489,8 @@ body {
 .loading {
     text-align: center;
     padding: 40px;
-    color: #666;
+    color: #999;
+    font-size: 14px;
 }
 
 .loading::after {
@@ -456,10 +512,11 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.65);
     z-index: 1000;
     align-items: center;
     justify-content: center;
+    backdrop-filter: blur(3px);
 }
 
 .modal.active {
@@ -468,39 +525,45 @@ body {
 
 .modal-content {
     background: #fff;
-    padding: 40px;
-    max-width: 600px;
+    padding: 36px;
+    max-width: 560px;
     max-height: 80vh;
     overflow-y: auto;
     position: relative;
-    border-radius: 4px;
+    border-radius: 12px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.2);
 }
 
 .modal-close {
     position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 30px;
+    top: 12px;
+    right: 16px;
+    font-size: 26px;
     cursor: pointer;
-    color: #333;
+    color: #999;
+    transition: color 0.2s;
+    line-height: 1;
 }
 
 .modal-close:hover {
-    color: #c00;
+    color: #3a3a3a;
 }
 
 .modal-image {
     max-width: 100%;
     margin-bottom: 20px;
+    border-radius: 8px;
 }
 
 .modal-title {
-    font-size: 24px;
-    margin-bottom: 15px;
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #3a3a3a;
 }
 
 .modal-description {
-    font-size: 16px;
-    color: #666;
+    font-size: 15px;
+    color: #6b6b6b;
     line-height: 1.8;
 }
