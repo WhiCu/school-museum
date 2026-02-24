@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель — Музей лицея №76</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <header class="header">
+        <nav class="nav">
+            <a href="index.html" class="nav-item">← НА САЙТ</a>
+            <span class="nav-item admin-brand">АДМИН-ПАНЕЛЬ</span>
+        </nav>
+    </header>
+
+    <main class="admin-main">
+        <aside class="admin-sidebar">
+            <ul class="sidebar-menu">
+                <li class="sidebar-item active" data-section="exhibitions">
+                    <span class="sidebar-icon">🏛️</span> Экспозиции
+                </li>
+                <li class="sidebar-item" data-section="exhibits">
+                    <span class="sidebar-icon">🖼️</span> Экспонаты
+                </li>
+                <li class="sidebar-item" data-section="news">
+                    <span class="sidebar-icon">📰</span> Новости
+                </li>
+            </ul>
+        </aside>
+
+        <section class="admin-content">
+            <!-- Экспозиции -->
+            <div id="section-exhibitions" class="admin-section active">
+                <div class="section-header">
+                    <h2>Экспозиции</h2>
+                    <button class="btn btn-primary" onclick="showExhibitionForm()">+ Добавить</button>
+                </div>
+                <div id="exhibitions-list" class="items-list">
+                    <div class="loading">Загрузка...</div>
+                </div>
+            </div>
+
+            <!-- Экспонаты -->
+            <div id="section-exhibits" class="admin-section">
+                <div class="section-header">
+                    <h2>Экспонаты</h2>
+                    <button class="btn btn-primary" onclick="showExhibitForm()">+ Добавить</button>
+                </div>
+                <div id="exhibits-list" class="items-list">
+                    <div class="loading">Загрузка...</div>
+                </div>
+            </div>
+
+            <!-- Новости -->
+            <div id="section-news" class="admin-section">
+                <div class="section-header">
+                    <h2>Новости</h2>
+                    <button class="btn btn-primary" onclick="showNewsForm()">+ Добавить</button>
+                </div>
+                <div id="news-list" class="items-list">
+                    <div class="loading">Загрузка...</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Модальное окно -->
+    <div id="modal-overlay" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal-dialog" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="modal-title">Заголовок</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modal-body" class="modal-body">
+                <!-- Динамическое содержимое формы -->
+            </div>
+        </div>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>

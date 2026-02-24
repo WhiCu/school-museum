@@ -1,0 +1,393 @@
+// Админ-панель — JavaScript
+
+const ADMIN_API = '/admin';
+const MUSEUM_API = '/museum';
+
+// ==================== Навигация ====================
+
+document.querySelectorAll('.sidebar-item').forEach(item => {
+    item.addEventListener('click', () => {
+        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+        document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+        item.classList.add('active');
+        const section = item.getAttribute('data-section');
+        document.getElementById('section-' + section).classList.add('active');
+    });
+});
+
+// ==================== Инициализация ====================
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadExhibitions();
+    loadAllExhibits();
+    loadNews();
+});
+
+// ==================== Общие утилиты ====================
+
+async function apiRequest(url, method = 'GET', body = null) {
+    const opts = { method, headers: {} };
+    if (body) {
+        opts.headers['Content-Type'] = 'application/json';
+        opts.body = JSON.stringify(body);
+    }
+    const resp = await fetch(url, opts);
+    if (method === 'DELETE') {
+        if (!resp.ok) throw new Error('Ошибка удаления');
+        return null;
+    }
+    if (!resp.ok) {
+        const text = await resp.text();
+        throw new Error(text || 'Ошибка запроса');
+    }
+    return resp.json();
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function truncate(text, len = 100) {
+    if (!text || text.length <= len) return text || '';
+    return text.substring(0, len) + '...';
+}
+
+// ==================== ЭКСПОЗИЦИИ ====================
+
+let exhibitionsCache = [];
+
+async function loadExhibitions() {
+    const container = document.getElementById('exhibitions-list');
+    try {
+        const data = await apiRequest(`${MUSEUM_API}/exhibitions`);
+        exhibitionsCache = Array.isArray(data) ? data : (data.exhibitions || []);
+
+        if (exhibitionsCache.length === 0) {
+            container.innerHTML = '<div class="empty-state">Экспозиций пока нет</div>';
+            return;
+        }
+
+        container.innerHTML = exhibitionsCache.map(ex => `
+            <div class="item-card">
+                <div class="item-info">
+                    <h3 class="item-title">${ex.title}</h3>
+                    <p class="item-desc">${truncate(ex.description, 120)}</p>
+                    <span class="item-meta">${(ex.exhibits || []).length} экспонатов</span>
+                </div>
+                <div class="item-actions">
+                    <button class="btn btn-small btn-edit" onclick="showExhibitionForm('${ex.id}')">✏️</button>
+                    <button class="btn btn-small btn-delete" onclick="deleteExhibition('${ex.id}')">🗑️</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        container.innerHTML = '<div class="error-state">Ошибка загрузки: ' + e.message + '</div>';
+    }
+}
+
+function showExhibitionForm(id = null) {
+    const ex = id ? exhibitionsCache.find(e => e.id === id) : null;
+    const isEdit = !!ex;
+
+    document.getElementById('modal-title').textContent = isEdit ? 'Редактировать экспозицию' : 'Новая экспозиция';
+    document.getElementById('modal-body').innerHTML = `
+        <form id="exhibition-form" onsubmit="saveExhibition(event, '${id || ''}')">
+            <div class="form-group">
+                <label>Название *</label>
+                <input type="text" id="ex-title" value="${isEdit ? ex.title : ''}" required>
+            </div>
+            <div class="form-group">
+                <label>Описание</label>
+                <textarea id="ex-description" rows="4">${isEdit ? (ex.description || '') : ''}</textarea>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+                <button type="submit" class="btn btn-primary">${isEdit ? 'Сохранить' : 'Создать'}</button>
+            </div>
+        </form>
+    `;
+    openModal();
+}
+
+async function saveExhibition(event, id) {
+    event.preventDefault();
+    const body = {
+        title: document.getElementById('ex-title').value.trim(),
+        description: document.getElementById('ex-description').value.trim()
+    };
+    try {
+        if (id) {
+            await apiRequest(`${ADMIN_API}/exhibitions/${id}`, 'PUT', body);
+        } else {
+            await apiRequest(`${ADMIN_API}/exhibitions`, 'POST', body);
+        }
+        closeModal();
+        await loadExhibitions();
+        await loadAllExhibits(); // обновить выпадающий список
+    } catch (e) {
+        alert('Ошибка: ' + e.message);
+    }
+}
+
+async function deleteExhibition(id) {
+    if (!confirm('Удалить экспозицию и все её экспонаты?')) return;
+    try {
+        await apiRequest(`${ADMIN_API}/exhibitions/${id}`, 'DELETE');
+        await loadExhibitions();
+        await loadAllExhibits();
+    } catch (e) {
+        alert('Ошибка удаления: ' + e.message);
+    }
+}
+
+// ==================== ЭКСПОНАТЫ ====================
+
+let allExhibits = [];
+
+async function loadAllExhibits() {
+    const container = document.getElementById('exhibits-list');
+    try {
+        // Загружаем все экспозиции с экспонатами
+        const data = await apiRequest(`${MUSEUM_API}/exhibitions`);
+        const exhibitions = Array.isArray(data) ? data : (data.exhibitions || []);
+
+        allExhibits = [];
+        exhibitions.forEach(ex => {
+            (ex.exhibits || []).forEach(exhibit => {
+                allExhibits.push({ ...exhibit, exhibition_id: ex.id, exhibition_title: ex.title });
+            });
+        });
+
+        if (allExhibits.length === 0 && exhibitions.length === 0) {
+            container.innerHTML = '<div class="empty-state">Экспонатов пока нет</div>';
+            return;
+        }
+
+        container.innerHTML = exhibitions.map(ex => {
+            const exhibits = allExhibits.filter(e => e.exhibition_id === ex.id);
+            return `
+                <div class="exhibit-group">
+                    <div class="exhibit-group-header" onclick="toggleGroup(this)">
+                        <span class="group-toggle">▾</span>
+                        <h3 class="group-title">🏛️ ${ex.title}</h3>
+                        <span class="group-count">${exhibits.length} экспонатов</span>
+                    </div>
+                    <div class="exhibit-group-items">
+                        ${exhibits.length === 0
+                            ? '<div class="empty-state" style="padding:16px;font-size:14px;">Нет экспонатов</div>'
+                            : exhibits.map(item => `
+                                <div class="item-card">
+                                    <div class="item-info">
+                                        ${item.image_url ? `<img src="${item.image_url}" class="item-thumb" alt="">` : ''}
+                                        <div>
+                                            <h3 class="item-title">${item.title}</h3>
+                                            <p class="item-desc">${truncate(item.description, 100)}</p>
+                                        </div>
+                                    </div>
+                                    <div class="item-actions">
+                                        <button class="btn btn-small btn-edit" onclick="showExhibitForm('${item.id}')">✏️</button>
+                                        <button class="btn btn-small btn-delete" onclick="deleteExhibit('${item.id}')">🗑️</button>
+                                    </div>
+                                </div>
+                            `).join('')
+                        }
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (e) {
+        container.innerHTML = '<div class="error-state">Ошибка загрузки: ' + e.message + '</div>';
+    }
+}
+
+function showExhibitForm(id = null) {
+    const item = id ? allExhibits.find(e => e.id === id) : null;
+    const isEdit = !!item;
+
+    const exhibitionOptions = exhibitionsCache.map(ex =>
+        `<option value="${ex.id}" ${item && item.exhibition_id === ex.id ? 'selected' : ''}>${ex.title}</option>`
+    ).join('');
+
+    document.getElementById('modal-title').textContent = isEdit ? 'Редактировать экспонат' : 'Новый экспонат';
+    document.getElementById('modal-body').innerHTML = `
+        <form id="exhibit-form" onsubmit="saveExhibit(event, '${id || ''}')">
+            ${!isEdit ? `
+            <div class="form-group">
+                <label>Экспозиция *</label>
+                <select id="exhibit-exhibition" required>
+                    <option value="">Выберите экспозицию</option>
+                    ${exhibitionOptions}
+                </select>
+            </div>
+            ` : ''}
+            <div class="form-group">
+                <label>Название *</label>
+                <input type="text" id="exhibit-title" value="${isEdit ? item.title : ''}" required>
+            </div>
+            <div class="form-group">
+                <label>Описание</label>
+                <textarea id="exhibit-description" rows="4">${isEdit ? (item.description || '') : ''}</textarea>
+            </div>
+            <div class="form-group">
+                <label>URL изображения</label>
+                <input type="url" id="exhibit-image" value="${isEdit ? (item.image_url || '') : ''}" placeholder="https://...">
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+                <button type="submit" class="btn btn-primary">${isEdit ? 'Сохранить' : 'Создать'}</button>
+            </div>
+        </form>
+    `;
+    openModal();
+}
+
+async function saveExhibit(event, id) {
+    event.preventDefault();
+    try {
+        if (id) {
+            const body = {
+                title: document.getElementById('exhibit-title').value.trim(),
+                description: document.getElementById('exhibit-description').value.trim(),
+                image_url: document.getElementById('exhibit-image').value.trim()
+            };
+            await apiRequest(`${ADMIN_API}/exhibits/${id}`, 'PUT', body);
+        } else {
+            const body = {
+                exhibition_id: document.getElementById('exhibit-exhibition').value,
+                title: document.getElementById('exhibit-title').value.trim(),
+                description: document.getElementById('exhibit-description').value.trim(),
+                image_url: document.getElementById('exhibit-image').value.trim()
+            };
+            await apiRequest(`${ADMIN_API}/exhibits`, 'POST', body);
+        }
+        closeModal();
+        await loadAllExhibits();
+        await loadExhibitions();
+    } catch (e) {
+        alert('Ошибка: ' + e.message);
+    }
+}
+
+async function deleteExhibit(id) {
+    if (!confirm('Удалить экспонат?')) return;
+    try {
+        await apiRequest(`${ADMIN_API}/exhibits/${id}`, 'DELETE');
+        await loadAllExhibits();
+        await loadExhibitions();
+    } catch (e) {
+        alert('Ошибка удаления: ' + e.message);
+    }
+}
+
+// ==================== НОВОСТИ ====================
+
+let newsCache = [];
+
+async function loadNews() {
+    const container = document.getElementById('news-list');
+    try {
+        const data = await apiRequest(`${MUSEUM_API}/news`);
+        newsCache = Array.isArray(data) ? data : (data.news || []);
+
+        if (newsCache.length === 0) {
+            container.innerHTML = '<div class="empty-state">Новостей пока нет</div>';
+            return;
+        }
+
+        container.innerHTML = newsCache.map(n => `
+            <div class="item-card">
+                <div class="item-info">
+                    ${n.image_url ? `<img src="${n.image_url}" class="item-thumb" alt="">` : ''}
+                    <div>
+                        <h3 class="item-title">${n.title}</h3>
+                        <p class="item-desc">${truncate(n.content, 120)}</p>
+                        <span class="item-meta">${formatDate(n.created_at)}</span>
+                    </div>
+                </div>
+                <div class="item-actions">
+                    <button class="btn btn-small btn-delete" onclick="deleteNewsItem('${n.id}')">🗑️</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        container.innerHTML = '<div class="error-state">Ошибка загрузки: ' + e.message + '</div>';
+    }
+}
+
+function showNewsForm() {
+    document.getElementById('modal-title').textContent = 'Новая новость';
+    document.getElementById('modal-body').innerHTML = `
+        <form id="news-form" onsubmit="saveNews(event)">
+            <div class="form-group">
+                <label>Заголовок *</label>
+                <input type="text" id="news-title" required>
+            </div>
+            <div class="form-group">
+                <label>Содержание</label>
+                <textarea id="news-content" rows="6"></textarea>
+            </div>
+            <div class="form-group">
+                <label>URL изображения</label>
+                <input type="url" id="news-image" placeholder="https://...">
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+                <button type="submit" class="btn btn-primary">Создать</button>
+            </div>
+        </form>
+    `;
+    openModal();
+}
+
+async function saveNews(event) {
+    event.preventDefault();
+    const body = {
+        title: document.getElementById('news-title').value.trim(),
+        content: document.getElementById('news-content').value.trim(),
+        image_url: document.getElementById('news-image').value.trim()
+    };
+    try {
+        await apiRequest(`${ADMIN_API}/news`, 'POST', body);
+        closeModal();
+        await loadNews();
+    } catch (e) {
+        alert('Ошибка: ' + e.message);
+    }
+}
+
+async function deleteNewsItem(id) {
+    if (!confirm('Удалить новость?')) return;
+    try {
+        await apiRequest(`${ADMIN_API}/news/${id}`, 'DELETE');
+        await loadNews();
+    } catch (e) {
+        alert('Ошибка удаления: ' + e.message);
+    }
+}
+
+// ==================== ГРУППИРОВКА ====================
+
+function toggleGroup(header) {
+    const group = header.closest('.exhibit-group');
+    group.classList.toggle('collapsed');
+    const toggle = header.querySelector('.group-toggle');
+    toggle.textContent = group.classList.contains('collapsed') ? '▸' : '▾';
+}
+
+// ==================== МОДАЛЬНОЕ ОКНО ====================
+
+function openModal() {
+    document.getElementById('modal-overlay').classList.add('active');
+}
+
+function closeModal(event) {
+    if (event && event.target !== event.currentTarget) return;
+    document.getElementById('modal-overlay').classList.remove('active');
+}
+
+// Закрытие по Escape
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+});
