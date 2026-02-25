@@ -30,14 +30,14 @@ func (s *VisitStorage) Record(ctx context.Context, v model.Visitor) error {
 	_, err := s.db.NewInsert().
 		Model(&v).
 		On("CONFLICT (ip) DO UPDATE").
-		Set("visit_count = visitors.visit_count + 1").
+		Set("visit_count = vis.visit_count + 1").
 		Set("last_visit_at = EXCLUDED.last_visit_at").
 		Set("user_agent = EXCLUDED.user_agent").
 		Set("page = EXCLUDED.page").
-		Set("referrer = CASE WHEN EXCLUDED.referrer != '' THEN EXCLUDED.referrer ELSE visitors.referrer END").
-		Set("screen_width = CASE WHEN EXCLUDED.screen_width > 0 THEN EXCLUDED.screen_width ELSE visitors.screen_width END").
-		Set("screen_height = CASE WHEN EXCLUDED.screen_height > 0 THEN EXCLUDED.screen_height ELSE visitors.screen_height END").
-		Set("language = CASE WHEN EXCLUDED.language != '' THEN EXCLUDED.language ELSE visitors.language END").
+		Set("referrer = CASE WHEN EXCLUDED.referrer != '' THEN EXCLUDED.referrer ELSE vis.referrer END").
+		Set("screen_width = CASE WHEN EXCLUDED.screen_width > 0 THEN EXCLUDED.screen_width ELSE vis.screen_width END").
+		Set("screen_height = CASE WHEN EXCLUDED.screen_height > 0 THEN EXCLUDED.screen_height ELSE vis.screen_height END").
+		Set("language = CASE WHEN EXCLUDED.language != '' THEN EXCLUDED.language ELSE vis.language END").
 		Exec(ctx)
 	return err
 }
