@@ -118,5 +118,9 @@ func NewDB(ctx context.Context, dsn string, opts ...Option) (db *bun.DB, err err
 			"ALTER TABLE "+table+" DROP COLUMN IF EXISTS image_url")
 	}
 
+	// Add preview_exhibit_id column to exhibitions table.
+	_, _ = db.ExecContext(ctx,
+		"ALTER TABLE exhibitions ADD COLUMN IF NOT EXISTS preview_exhibit_id uuid")
+
 	return db, nil
 }

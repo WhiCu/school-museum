@@ -80,3 +80,14 @@ func (s *ExhibitionStorage) First(ctx context.Context, f func(model.Exhibition) 
 	}
 	return model.Exhibition{}, ErrNotFound
 }
+
+// SetPreview sets the preview exhibit for an exhibition.
+// Pass nil to clear the preview.
+func (s *ExhibitionStorage) SetPreview(ctx context.Context, exhibitionID uuid.UUID, exhibitID *uuid.UUID) error {
+	_, err := s.db.NewUpdate().
+		Model((*model.Exhibition)(nil)).
+		Set("preview_exhibit_id = ?", exhibitID).
+		Where("id = ?", exhibitionID).
+		Exec(ctx)
+	return err
+}

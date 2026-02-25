@@ -14,7 +14,7 @@ import (
 func RegisterHandlers(
 	api huma.API,
 	news storage.Storage[model.News],
-	exhibitions storage.Storage[model.Exhibition],
+	exhibitions *storage.ExhibitionStorage,
 	exhibits storage.Storage[model.Exhibit],
 	visits *storage.VisitStorage,
 	log *slog.Logger) {
@@ -33,6 +33,7 @@ func RegisterHandlers(
 	h.CreateExhibition(api)
 	h.UpdateExhibition(api)
 	h.DeleteExhibition(api)
+	h.SetExhibitionPreview(api)
 
 	// Exhibits
 	h.CreateExhibit(api)

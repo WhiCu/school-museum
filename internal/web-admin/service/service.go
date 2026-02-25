@@ -21,6 +21,7 @@ type Storage interface {
 	UpdateExhibition(ctx context.Context, ex model.Exhibition) (model.Exhibition, error)
 	DeleteExhibition(ctx context.Context, id uuid.UUID) error
 	ExhibitionExists(ctx context.Context, id uuid.UUID) bool
+	SetExhibitionPreview(ctx context.Context, exhibitionID uuid.UUID, exhibitID *uuid.UUID) (model.Exhibition, error)
 
 	CreateExhibit(ctx context.Context, e model.Exhibit) (model.Exhibit, error)
 	UpdateExhibit(ctx context.Context, e model.Exhibit) (model.Exhibit, error)
@@ -67,6 +68,10 @@ func (s *Service) UpdateExhibition(ctx context.Context, ex model.Exhibition) (mo
 
 func (s *Service) DeleteExhibition(ctx context.Context, id uuid.UUID) error {
 	return s.storage.DeleteExhibition(ctx, id)
+}
+
+func (s *Service) SetExhibitionPreview(ctx context.Context, exhibitionID uuid.UUID, exhibitID *uuid.UUID) (model.Exhibition, error) {
+	return s.storage.SetExhibitionPreview(ctx, exhibitionID, exhibitID)
 }
 
 // --- Exhibits ---

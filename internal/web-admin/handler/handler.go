@@ -16,6 +16,7 @@ type service interface {
 	CreateExhibition(ctx context.Context, ex model.Exhibition) (model.Exhibition, error)
 	UpdateExhibition(ctx context.Context, ex model.Exhibition) (model.Exhibition, error)
 	DeleteExhibition(ctx context.Context, id uuid.UUID) error
+	SetExhibitionPreview(ctx context.Context, exhibitionID uuid.UUID, exhibitID *uuid.UUID) (model.Exhibition, error)
 
 	CreateExhibit(ctx context.Context, e model.Exhibit) (model.Exhibit, error)
 	UpdateExhibit(ctx context.Context, e model.Exhibit) (model.Exhibit, error)

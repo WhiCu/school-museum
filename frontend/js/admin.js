@@ -314,6 +314,7 @@ async function loadAllExhibits() {
 
         container.innerHTML = exhibitions.map(ex => {
             const exhibits = allExhibits.filter(e => e.exhibition_id === ex.id);
+            const previewId = ex.preview_exhibit_id || '';
             return `
                 <div class="exhibit-group">
                     <div class="exhibit-group-header" onclick="toggleGroup(this)">
@@ -327,12 +328,18 @@ async function loadAllExhibits() {
                             : exhibits.map(item => {
                                 const imgs = item.image_urls || [];
                                 const firstImg = imgs.length > 0 ? imgs[0] : '';
+                                const isPreview = item.id === previewId;
                                 return `
-                                <div class="item-card">
+                                <div class="item-card ${isPreview ? 'item-card--preview' : ''}">
                                     <div class="item-info">
+                                        <label class="preview-radio" title="Превью экспозиции">
+                                            <input type="radio" name="preview-${ex.id}" value="${item.id}" ${isPreview ? 'checked' : ''}
+                                                onchange="setPreviewExhibit('${ex.id}', '${item.id}')">
+                                            <span class="preview-radio-mark"></span>
+                                        </label>
                                         ${firstImg ? `<img src="${firstImg}" class="item-thumb" alt="">` : ''}
                                         <div>
-                                            <h3 class="item-title">${item.title}</h3>
+                                            <h3 class="item-title">${item.title}${isPreview ? ' <span class="preview-badge">превью</span>' : ''}</h3>
                                             <p class="item-desc">${truncate(item.description, 100)}${imgs.length > 1 ? ` · ${imgs.length} фото` : ''}</p>
                                         </div>
                                     </div>
@@ -617,6 +624,16 @@ function renderDailyChart(dailyVisits) {
 }
 
 // ==================== ГРУППИРОВКА ====================
+
+async function setPreviewExhibit(exhibitionId, exhibitId) {
+    try {
+        await apiRequest(`${ADMIN_API}/exhibitions/${exhibitionId}/preview`, 'PUT', { exhibit_id: exhibitId });
+        await loadAllExhibits();
+        await loadExhibitions();
+    } catch (e) {
+        alert('Ошибка установки превью: ' + e.message);
+    }
+}
 
 function toggleGroup(header) {
     const group = header.closest('.exhibit-group');

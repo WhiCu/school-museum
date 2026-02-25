@@ -298,10 +298,22 @@ async function loadExhibitions() {
     grid.innerHTML = exhibitions.map((ex, i) => {
         const exhibitCount = (ex.exhibits || []).length;
         const icon = icons[i % icons.length];
+        // Find preview image from the selected preview exhibit
+        let previewImg = '';
+        if (ex.preview_exhibit_id && ex.exhibits) {
+            const previewExhibit = ex.exhibits.find(e => e.id === ex.preview_exhibit_id);
+            if (previewExhibit) {
+                const imgs = previewExhibit.image_urls || [];
+                if (imgs.length > 0) previewImg = imgs[0];
+            }
+        }
         return `
             <div class="exhibition-card" onclick="openExhibition('${ex.id}')">
                 <div class="exhibition-card-image">
-                    <span class="exhibition-card-icon">${icon}</span>
+                    ${previewImg
+                        ? `<img src="${previewImg}" alt="${ex.title}" class="exhibition-card-preview-img">`
+                        : `<span class="exhibition-card-icon">${icon}</span>`
+                    }
                     ${exhibitCount > 0 ? `<span class="exhibition-card-count">${exhibitCount} экспонатов</span>` : ''}
                 </div>
                 <div class="exhibition-card-body">

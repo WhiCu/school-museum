@@ -112,3 +112,44 @@ func (h *Handler) DeleteExhibition(api huma.API) {
 		},
 	)
 }
+
+// SetExhibitionPreview - установка превью-экспоната для экспозиции.
+type setExhibitionPreviewInput struct {
+	ID   uuid.UUID `path:"id" format:"uuid" doc:"ID экспозиции"`
+	Body struct {
+		ExhibitID string `json:"exhibit_id" doc:"ID экспоната-превью (пустая строка для сброса)"`
+	}
+}
+
+type setExhibitionPreviewOutput struct {
+	Body model.Exhibition
+}
+
+func (h *Handler) SetExhibitionPreview(api huma.API) {
+	huma.Register(
+		api,
+		huma.Operation{
+			OperationID: "set-exhibition-preview",
+			Method:      http.MethodPut,
+			Path:        "/exhibitions/{id}/preview",
+			Summary:     "Установить превью экспозиции",
+			Description: "Устанавливает экспонат, изображение которого будет использоваться как превью экспозиции.",
+			Tags:        []string{"Admin", "Exhibitions"},
+		},
+		func(ctx context.Context, req *setExhibitionPreviewInput) (*setExhibitionPreviewOutput, error) {
+			var exhibitID *uuid.UUID
+			if req.Body.ExhibitID != "" {
+				parsed, err := uuid.Parse(req.Body.ExhibitID)
+				if err != nil {
+					return nil, huma.Error422UnprocessableEntity("неверный формат ID экспоната")
+				}
+				exhibitID = &parsed
+			}
+			ex, err := h.service.SetExhibitionPreview(ctx, req.ID, exhibitID)
+			if err != nil {
+				return nil, huma.Error500InternalServerError("не удалось установить превью")
+			}
+			return &setExhibitionPreviewOutput{Body: ex}, nil
+		},
+	)
+}
