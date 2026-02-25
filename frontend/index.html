@@ -3,77 +3,239 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Музей лицея №76</title>
+    <title>Историко-краеведческий музей «Страницы истории» — Лицей №76</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <header class="header">
-        <nav class="nav">
-            <div class="nav-item dropdown">
-                <span>МУЗЕЙ</span>
-                <span class="dropdown-arrow">▼</span>
-            </div>
-            <a href="#" class="nav-item">КУПИТЬ БИЛЕТЫ</a>
-            <div class="nav-item dropdown">
-                <span>ПОСЕТИТЕЛЯМ</span>
-                <span class="dropdown-arrow">▼</span>
-            </div>
-            <div class="nav-item dropdown">
-                <span>ТУРФИРМАМ</span>
-                <span class="dropdown-arrow">▼</span>
-            </div>
-            <a href="#" class="nav-item">ПУШКИНСКАЯ КАРТА</a>
-            <a href="admin.html" class="nav-item">АДМИН</a>
-            <button class="search-btn">🔍</button>
-        </nav>
+
+    <!-- ═══════════ НАВИГАЦИЯ ═══════════ -->
+    <header class="header" id="header">
+        <div class="header-inner">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">🏛</span>
+                <span class="logo-text">Музей «Страницы истории»</span>
+            </a>
+            <nav class="nav" id="nav">
+                <a href="#about" class="nav-link">О нас</a>
+                <a href="#exhibitions" class="nav-link">Экспозиции</a>
+                <a href="#news" class="nav-link">Новости</a>
+                <a href="#team" class="nav-link">Руководство</a>
+                <a href="#visit" class="nav-link">Посетителям</a>
+                <a href="#contacts" class="nav-link">Контакты</a>
+                <a href="admin.html" class="nav-link nav-link--admin">Админ</a>
+            </nav>
+            <button class="burger" id="burger" aria-label="Меню">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
     </header>
 
     <main>
-        <section class="hero">
-            <h1>Сайт музея лицея №76</h1>
-        </section>
 
-        <section class="description">
-            <div class="container">
-                <h2>Описание</h2>
-                <p>Добро пожаловать в музей лицея №76. Здесь собраны уникальные экспонаты, отражающие историю нашего учебного заведения.</p>
+        <!-- ═══════════ HERO ═══════════ -->
+        <section class="hero" id="hero">
+            <div class="hero-overlay"></div>
+            <div class="hero-content">
+                <p class="hero-badge">Лицей №76 г. Ярославля</p>
+                <h1 class="hero-title">Историко-краеведческий музей<br>«Страницы истории»</h1>
+                <p class="hero-subtitle">Интерактивное пространство, где прошлое оживает</p>
+                <a href="#about" class="hero-btn">Узнать больше</a>
+            </div>
+            <div class="hero-scroll">
+                <span class="hero-scroll-text">Прокрутите вниз</span>
+                <span class="hero-scroll-arrow">↓</span>
             </div>
         </section>
 
-        <section class="news-section">
+        <!-- ═══════════ О НАС ═══════════ -->
+        <section class="section about" id="about">
             <div class="container">
-                <h2>Новости</h2>
-                <div id="news-container" class="news-grid">
-                    <!-- Новости загружаются через JS -->
-                </div>
-            </div>
-        </section>
-
-        <section class="exhibitions-section">
-            <div class="container">
-                <h2>Экспозиции</h2>
-                <div class="exhibitions-carousel">
-                    <button class="carousel-btn prev" onclick="prevExhibition()">◄</button>
-                    <div class="exhibition-card" id="exhibition-card">
-                        <div class="exhibition-info">
-                            <p class="exhibition-note">здесь должна быть страничка "живой истории", которую сделает другое направление служения</p>
-                            <p class="exhibition-description">эта страничка будет оглавлять экспозицию<br>на ней должна быть анимированная фотка или 3д модель, анимация стартует при наведении</p>
+                <div class="section-label">О музее</div>
+                <h2 class="section-title">Добро пожаловать в наш музей</h2>
+                <div class="about-content">
+                    <div class="about-text">
+                        <p>Музей «Страницы истории» находится в Лицее №76. С начала своего существования музей образует вокруг себя круг неравнодушных краеведов и интересует каждого посетителя Лицея.</p>
+                        <p>Начав работу в 2018 году, наш музей собрал уникальную коллекцию экспонатов, отражающих историю Ярославского края. Предлагаем и вам окунуться в увлекательную историю нашего региона.</p>
+                    </div>
+                    <div class="about-image">
+                        <div class="about-image-placeholder">
+                            <span class="about-icon">📜</span>
                         </div>
                     </div>
-                    <button class="carousel-btn next" onclick="nextExhibition()">►</button>
-                </div>
-                <div class="carousel-dots" id="carousel-dots">
-                    <!-- Точки навигации добавляются через JS -->
                 </div>
             </div>
         </section>
+
+        <!-- ═══════════ СТАТИСТИКА ═══════════ -->
+        <section class="section stats">
+            <div class="container">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" data-target="900">0</div>
+                        <div class="stat-label">учеников посетили</div>
+                        <p class="stat-desc">Приглашаем каждого лицеиста и не только!</p>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="stat-exhibitions" data-target="5">0</div>
+                        <div class="stat-label">экспозиций</div>
+                        <p class="stat-desc">Коллекция экспонатов неустанно пополняется</p>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" data-target="10">0</div>
+                        <div class="stat-label">экскурсоводов</div>
+                        <p class="stat-desc">Профессиональные учителя истории и активисты музея</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════ ЭКСПОЗИЦИИ ═══════════ -->
+        <section class="section exhibitions" id="exhibitions">
+            <div class="container">
+                <div class="section-label">Коллекция</div>
+                <h2 class="section-title">Наши экспозиции</h2>
+                <div id="exhibitions-grid" class="exhibitions-grid">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        <p>Загрузка экспозиций...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════ НОВОСТИ ═══════════ -->
+        <section class="section news" id="news">
+            <div class="container">
+                <div class="section-label">Актуальное</div>
+                <h2 class="section-title">Новости музея</h2>
+                <div id="news-container" class="news-grid">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        <p>Загрузка новостей...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════ РУКОВОДСТВО ═══════════ -->
+        <section class="section team" id="team">
+            <div class="container">
+                <div class="section-label">Команда</div>
+                <h2 class="section-title">Руководство музея</h2>
+                <div class="team-grid">
+                    <div class="team-card">
+                        <div class="team-avatar">
+                            <span class="team-avatar-icon">👩‍🏫</span>
+                        </div>
+                        <h3 class="team-name">Руководитель музея</h3>
+                        <p class="team-role">Глава музея «Страницы истории», учитель истории и обществознания Лицея №76</p>
+                    </div>
+                    <div class="team-card">
+                        <div class="team-avatar">
+                            <span class="team-avatar-icon">🎓</span>
+                        </div>
+                        <h3 class="team-name">Старший экскурсовод</h3>
+                        <p class="team-role">Активист музея, ведущий экскурсовод по всем экспозициям</p>
+                    </div>
+                    <div class="team-card">
+                        <div class="team-avatar">
+                            <span class="team-avatar-icon">💻</span>
+                        </div>
+                        <h3 class="team-name">Тех. администратор</h3>
+                        <p class="team-role">Активист музея, отвечает за техническую поддержку и онлайн-ресурсы</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════ ПОСЕТИТЕЛЯМ ═══════════ -->
+        <section class="section visit" id="visit">
+            <div class="container">
+                <div class="section-label">Интерактив</div>
+                <h2 class="section-title">Уголок посетителя</h2>
+                <p class="section-subtitle">Для тех, кому не достаточно школьной программы</p>
+                <div class="visit-grid">
+                    <div class="visit-card">
+                        <div class="visit-card-icon">🧩</div>
+                        <h3>Викторины</h3>
+                        <p>Знали ли вы, какую музыку слушали ваши родители? Что содержал портфель лицеиста более века назад? Для любознательных — увлекательные викторины.</p>
+                    </div>
+                    <div class="visit-card">
+                        <div class="visit-card-icon">🖥</div>
+                        <h3>Онлайн-посещение</h3>
+                        <p>Вы можете посетить наш музей, не отходя от экрана. Виртуальные туры и интерактивные экспозиции доступны онлайн.</p>
+                    </div>
+                    <div class="visit-card">
+                        <div class="visit-card-icon">📝</div>
+                        <h3>Тесты</h3>
+                        <p>Если вы решили серьёзно погрузиться в изучение истории, то этот раздел создан для вас. Проверьте свои знания!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════ КОНТАКТЫ ═══════════ -->
+        <section class="section contacts" id="contacts">
+            <div class="container">
+                <div class="contacts-inner">
+                    <div class="contacts-info">
+                        <div class="section-label">Контакты</div>
+                        <h2 class="section-title section-title--left">Приходите к нам в гости!</h2>
+                        <p class="contacts-desc">Команда музея «Страницы истории» ждёт вас! Наш музей находится в здании Лицея №76 г. Ярославля.</p>
+                        <div class="contacts-list">
+                            <div class="contact-item">
+                                <span class="contact-icon">📍</span>
+                                <span>г. Ярославль, ул. Зелинского, 6</span>
+                            </div>
+                            <div class="contact-item">
+                                <span class="contact-icon">📞</span>
+                                <span>+7 (905) 646-41-27</span>
+                            </div>
+                            <div class="contact-item">
+                                <span class="contact-icon">✉️</span>
+                                <a href="mailto:museum@licey76.ru">museum@licey76.ru</a>
+                            </div>
+                        </div>
+                        <div class="contacts-socials">
+                            <a href="#" class="social-link" title="ВКонтакте">VK</a>
+                            <a href="#" class="social-link" title="Telegram">TG</a>
+                        </div>
+                    </div>
+                    <div class="contacts-map">
+                        <div class="map-placeholder">
+                            <span class="map-icon">🗺</span>
+                            <p>Карта</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </main>
 
+    <!-- ═══════════ FOOTER ═══════════ -->
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2026 Музей лицея №76. Все права защищены.</p>
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <span class="footer-logo">🏛</span>
+                    <span>Музей «Страницы истории»</span>
+                </div>
+                <p class="footer-copy">&copy; 2026 Лицей №76 г. Ярославля. Все права защищены.</p>
+            </div>
         </div>
     </footer>
+
+    <!-- Модальное окно новости -->
+    <div class="modal-overlay" id="news-modal">
+        <div class="modal-dialog">
+            <button class="modal-close" id="news-modal-close">&times;</button>
+            <div class="modal-body" id="news-modal-body"></div>
+        </div>
+    </div>
 
     <script src="js/api.js"></script>
     <script src="js/main.js"></script>

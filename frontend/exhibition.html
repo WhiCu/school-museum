@@ -3,64 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Экспозиция - Музей лицея №76</title>
+    <title>Экспозиция — Музей «Страницы истории»</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <header class="header">
-        <nav class="nav">
-            <div class="nav-item dropdown">
-                <span>МУЗЕЙ</span>
-                <span class="dropdown-arrow">▼</span>
-            </div>
-            <a href="#" class="nav-item">КУПИТЬ БИЛЕТЫ</a>
-            <div class="nav-item dropdown">
-                <span>ПОСЕТИТЕЛЯМ</span>
-                <span class="dropdown-arrow">▼</span>
-            </div>
-            <div class="nav-item dropdown">
-                <span>ТУРФИРМАМ</span>
-                <span class="dropdown-arrow">▼</span>
-            </div>
-            <a href="#" class="nav-item">ПУШКИНСКАЯ КАРТА</a>
-            <a href="admin.html" class="nav-item">АДМИН</a>
-            <button class="search-btn">🔍</button>
-        </nav>
+
+    <!-- ═══════════ НАВИГАЦИЯ ═══════════ -->
+    <header class="header" id="header">
+        <div class="header-inner">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">🏛</span>
+                <span class="logo-text">Музей «Страницы истории»</span>
+            </a>
+            <nav class="nav" id="nav">
+                <a href="index.html" class="nav-link">Главная</a>
+                <a href="index.html#exhibitions" class="nav-link">Экспозиции</a>
+                <a href="index.html#news" class="nav-link">Новости</a>
+                <a href="index.html#contacts" class="nav-link">Контакты</a>
+                <a href="admin.html" class="nav-link nav-link--admin">Админ</a>
+            </nav>
+            <button class="burger" id="burger" aria-label="Меню">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
     </header>
 
     <main>
-        <section class="exhibition-hero">
-            <div class="exhibition-header">
-                <div class="exhibition-preview">
-                    <p class="exhibition-note">здесь должна быть страничка "живой истории", которую сделает другое направление служения</p>
-                    <p class="exhibition-description-text">эта страничка будет оглавлять экспозицию<br>на ней должна быть анимированная фотка или 3д модель, анимация стартует при наведении</p>
+
+        <!-- ═══════════ HERO ЭКСПОЗИЦИИ ═══════════ -->
+        <section class="ex-hero" id="ex-hero">
+            <div class="ex-hero-overlay"></div>
+            <div class="ex-hero-content">
+                <a href="index.html#exhibitions" class="ex-back-link">← Все экспозиции</a>
+                <h1 class="ex-hero-title" id="ex-title">Загрузка...</h1>
+                <p class="ex-hero-desc" id="ex-description"></p>
+            </div>
+        </section>
+
+        <!-- ═══════════ ОПИСАНИЕ ═══════════ -->
+        <section class="section ex-about" id="ex-about">
+            <div class="container">
+                <div class="ex-about-block" id="ex-about-block" style="display:none;">
+                    <div class="section-label">Об экспозиции</div>
+                    <div class="ex-about-text" id="ex-about-text"></div>
                 </div>
             </div>
         </section>
 
-        <section class="exhibition-description-section">
+        <!-- ═══════════ ЭКСПОНАТЫ ═══════════ -->
+        <section class="section ex-exhibits">
             <div class="container">
-                <div class="description-block" id="exhibition-description">
-                    <h2>Блок описания экспозиции</h2>
-                    <p>Загрузка...</p>
+                <div class="section-label">Экспонаты</div>
+                <h2 class="section-title">Коллекция экспозиции</h2>
+                <div id="exhibits-grid" class="exhibits-grid">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        <p>Загрузка экспонатов...</p>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <section class="exhibits-section">
-            <div class="container">
-                <div class="exhibits-grid" id="exhibits-grid">
-                    <!-- Экспонаты загружаются через JS -->
-                </div>
-            </div>
-        </section>
     </main>
 
+    <!-- ═══════════ FOOTER ═══════════ -->
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2026 Музей лицея №76. Все права защищены.</p>
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <span class="footer-logo">🏛</span>
+                    <span>Музей «Страницы истории»</span>
+                </div>
+                <p class="footer-copy">&copy; 2026 Лицей №76 г. Ярославля. Все права защищены.</p>
+            </div>
         </div>
     </footer>
+
+    <!-- Модальное окно экспоната -->
+    <div class="modal-overlay" id="exhibit-modal">
+        <div class="modal-dialog modal-dialog--wide">
+            <button class="modal-close" id="exhibit-modal-close">&times;</button>
+            <div class="modal-body" id="exhibit-modal-body"></div>
+        </div>
+    </div>
 
     <script src="js/api.js"></script>
     <script src="js/exhibition.js"></script>

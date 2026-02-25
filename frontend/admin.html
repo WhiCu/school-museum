@@ -3,42 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Админ-панель — Музей лицея №76</title>
+    <title>Админ-панель — Музей «Страницы истории»</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/admin.css">
 </head>
-<body>
-    <header class="header">
-        <nav class="nav">
-            <a href="index.html" class="nav-item">← НА САЙТ</a>
-            <span class="nav-item admin-brand">АДМИН-ПАНЕЛЬ</span>
-        </nav>
+<body class="admin-body">
+
+    <!-- ═══════════ HEADER ═══════════ -->
+    <header class="admin-header">
+        <div class="admin-header-inner">
+            <a href="index.html" class="admin-back">
+                <span class="admin-back-arrow">←</span>
+                <span>На сайт</span>
+            </a>
+            <span class="admin-brand-title">🏛 Панель управления</span>
+        </div>
     </header>
 
-    <main class="admin-main">
-        <aside class="admin-sidebar">
+    <!-- ═══════════ LAYOUT ═══════════ -->
+    <div class="admin-layout">
+
+        <!-- Sidebar -->
+        <aside class="admin-sidebar" id="admin-sidebar">
             <ul class="sidebar-menu">
                 <li class="sidebar-item active" data-section="exhibitions">
-                    <span class="sidebar-icon">🏛️</span> Экспозиции
+                    <span class="sidebar-icon">🏛️</span>
+                    <span class="sidebar-label">Экспозиции</span>
                 </li>
                 <li class="sidebar-item" data-section="exhibits">
-                    <span class="sidebar-icon">🖼️</span> Экспонаты
+                    <span class="sidebar-icon">🖼️</span>
+                    <span class="sidebar-label">Экспонаты</span>
                 </li>
                 <li class="sidebar-item" data-section="news">
-                    <span class="sidebar-icon">📰</span> Новости
+                    <span class="sidebar-icon">📰</span>
+                    <span class="sidebar-label">Новости</span>
                 </li>
             </ul>
         </aside>
 
+        <!-- Content -->
         <section class="admin-content">
+
             <!-- Экспозиции -->
             <div id="section-exhibitions" class="admin-section active">
                 <div class="section-header">
                     <h2>Экспозиции</h2>
-                    <button class="btn btn-primary" onclick="showExhibitionForm()">+ Добавить</button>
+                    <button class="btn btn-primary" onclick="showExhibitionForm()">
+                        <span class="btn-icon">+</span> Добавить
+                    </button>
                 </div>
                 <div id="exhibitions-list" class="items-list">
-                    <div class="loading">Загрузка...</div>
+                    <div class="loading-state"><div class="spinner"></div><p>Загрузка...</p></div>
                 </div>
             </div>
 
@@ -46,10 +64,12 @@
             <div id="section-exhibits" class="admin-section">
                 <div class="section-header">
                     <h2>Экспонаты</h2>
-                    <button class="btn btn-primary" onclick="showExhibitForm()">+ Добавить</button>
+                    <button class="btn btn-primary" onclick="showExhibitForm()">
+                        <span class="btn-icon">+</span> Добавить
+                    </button>
                 </div>
                 <div id="exhibits-list" class="items-list">
-                    <div class="loading">Загрузка...</div>
+                    <div class="loading-state"><div class="spinner"></div><p>Загрузка...</p></div>
                 </div>
             </div>
 
@@ -57,14 +77,17 @@
             <div id="section-news" class="admin-section">
                 <div class="section-header">
                     <h2>Новости</h2>
-                    <button class="btn btn-primary" onclick="showNewsForm()">+ Добавить</button>
+                    <button class="btn btn-primary" onclick="showNewsForm()">
+                        <span class="btn-icon">+</span> Добавить
+                    </button>
                 </div>
                 <div id="news-list" class="items-list">
-                    <div class="loading">Загрузка...</div>
+                    <div class="loading-state"><div class="spinner"></div><p>Загрузка...</p></div>
                 </div>
             </div>
+
         </section>
-    </main>
+    </div>
 
     <!-- Модальное окно -->
     <div id="modal-overlay" class="modal-overlay" onclick="closeModal(event)">
@@ -73,12 +96,11 @@
                 <h3 id="modal-title">Заголовок</h3>
                 <button class="modal-close" onclick="closeModal()">&times;</button>
             </div>
-            <div id="modal-body" class="modal-body">
-                <!-- Динамическое содержимое формы -->
-            </div>
+            <div id="modal-body" class="modal-body"></div>
         </div>
     </div>
 
+    <script src="js/api.js"></script>
     <script src="js/admin.js"></script>
 </body>
 </html>

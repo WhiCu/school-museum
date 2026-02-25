@@ -118,9 +118,9 @@ func NewApp(ctx context.Context, cfg *config.Config, log *slog.Logger) *App {
 	// CORS middleware
 	handler = corsMiddleware(handler)
 
-	// Umami analytics middleware
+	// Umami analytics — resolve website at startup, expose config to frontend
 	if cfg.Telemetry.Umami.Enabled && cfg.Telemetry.Umami.URL != "" {
-		umami, err := telemetry.NewUmamiClient(ctx, telemetry.UmamiOpts{
+		umamiInfo, err := telemetry.ResolveUmamiWebsite(ctx, telemetry.UmamiOpts{
 			URL:       cfg.Telemetry.Umami.URL,
 			WebsiteID: cfg.Telemetry.Umami.WebsiteID,
 			Username:  cfg.Telemetry.Umami.Username,
@@ -128,10 +128,12 @@ func NewApp(ctx context.Context, cfg *config.Config, log *slog.Logger) *App {
 			Domain:    cfg.Telemetry.Umami.Domain,
 		}, log.WithGroup("umami"))
 		if err != nil {
-			log.Error("failed to init umami client, continuing without it", slog.String("error", err.Error()))
+			log.Error("failed to resolve umami website, analytics disabled", slog.String("error", err.Error()))
 		} else {
-			handler = umami.Middleware(handler)
-			log.Info("umami analytics enabled", slog.String("url", cfg.Telemetry.Umami.URL))
+			analyticsHandler(api, umamiInfo)
+			log.Info("umami analytics enabled (frontend tracking)",
+				slog.String("url", umamiInfo.URL),
+				slog.String("website_id", umamiInfo.WebsiteID))
 		}
 	}
 
