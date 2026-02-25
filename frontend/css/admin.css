@@ -1024,3 +1024,55 @@
         height: 40px;
     }
 }
+
+/* ═══════════ MULTI-IMAGE INPUT ═══════════ */
+
+.multi-image-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.multi-image-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.multi-image-row .image-preview-thumb {
+    width: 48px;
+    height: 48px;
+    border-radius: 6px;
+    object-fit: cover;
+    border: 1px solid #e0e0e0;
+    background: #f5f3ef;
+    flex-shrink: 0;
+    display: none;
+}
+
+.multi-image-row .image-preview-thumb.loaded {
+    display: block;
+}
+
+.multi-image-row .image-url-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+}
+
+.multi-image-row .image-url-input:focus {
+    outline: none;
+    border-color: #c9a96e;
+    box-shadow: 0 0 0 2px rgba(201, 169, 110, 0.15);
+}
+
+.multi-image-row .btn-delete {
+    flex-shrink: 0;
+    padding: 6px 10px;
+    font-size: 14px;
+    line-height: 1;
+}

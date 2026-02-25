@@ -87,20 +87,24 @@ function renderExhibits(exhibits) {
         return;
     }
 
-    grid.innerHTML = exhibits.map(exhibit => `
+    grid.innerHTML = exhibits.map(exhibit => {
+        const imgs = exhibit.image_urls || [];
+        const firstImg = imgs.length > 0 ? imgs[0] : '';
+        return `
         <div class="exhibit-card" onclick="openExhibitModal('${exhibit.id}')">
             <div class="exhibit-card-image">
-                ${exhibit.image_url
-                    ? `<img src="${exhibit.image_url}" alt="${exhibit.title}">`
+                ${firstImg
+                    ? `<img src="${firstImg}" alt="${exhibit.title}">`
                     : `<span class="exhibit-card-placeholder">✻</span>`
                 }
+                ${imgs.length > 1 ? `<span class="exhibit-card-count">${imgs.length} фото</span>` : ''}
             </div>
             <div class="exhibit-card-body">
                 <h4 class="exhibit-card-title">${exhibit.title}</h4>
                 <p class="exhibit-card-desc">${truncateText(exhibit.description || '', 100)}</p>
             </div>
         </div>
-    `).join('');
+    `}).join('');
 
     // Scroll animations
     initExhibitAnimations();
@@ -147,14 +151,15 @@ function openExhibitModal(exhibitId) {
     const body = document.getElementById('exhibit-modal-body');
     if (!modal || !body) return;
 
+    const imgs = exhibit.image_urls || [];
+
     body.innerHTML = `
-        ${exhibit.image_url
-            ? `<img src="${exhibit.image_url}" alt="${exhibit.title}" class="modal-image">`
-            : ''
-        }
+        ${buildImageCarousel(imgs, exhibit.title)}
         <h2 class="modal-title">${exhibit.title}</h2>
         <p class="modal-description">${exhibit.description || 'Описание экспоната отсутствует'}</p>
     `;
+
+    initModalCarousel(body);
 
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';

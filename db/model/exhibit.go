@@ -13,11 +13,19 @@ type Exhibit struct {
 	ExhibitionID  uuid.UUID `json:"exhibition_id" bun:"exhibition_id,type:uuid"`
 	Title         string    `json:"title" bun:"title"`
 	Description   string    `json:"description" bun:"description"`
-	ImageURL      string    `json:"image_url" bun:"image_url"`
+	ImageURLs     []string  `json:"image_urls" bun:"image_urls,type:text[],default:'{}'"`
 
 	CreatedAt time.Time `json:"created_at" bun:",nullzero,notnull,default:current_timestamp"`
 	UpdatedAt time.Time `json:"updated_at" bun:",nullzero,notnull,default:current_timestamp"`
 	DeletedAt time.Time `json:"-" bun:",soft_delete,nullzero"`
+}
+
+// ImageURL returns the first image URL for backward compatibility.
+func (e Exhibit) ImageURL() string {
+	if len(e.ImageURLs) > 0 {
+		return e.ImageURLs[0]
+	}
+	return ""
 }
 
 type Exhibition struct {

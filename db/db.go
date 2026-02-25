@@ -107,5 +107,16 @@ func NewDB(ctx context.Context, dsn string, opts ...Option) (db *bun.DB, err err
 		return nil, err
 	}
 
+	// Migrate image_url -> image_urls for news and exhibits tables.
+	// Adds new column if missing, copies data, then drops old column.
+	for _, table := range []string{"news", "exhibits"} {
+		_, _ = db.ExecContext(ctx,
+			"ALTER TABLE "+table+" ADD COLUMN IF NOT EXISTS image_urls text[] DEFAULT '{}'")
+		_, _ = db.ExecContext(ctx,
+			"UPDATE "+table+" SET image_urls = ARRAY[image_url] WHERE image_url IS NOT NULL AND image_url != '' AND (image_urls IS NULL OR image_urls = '{}')")
+		_, _ = db.ExecContext(ctx,
+			"ALTER TABLE "+table+" DROP COLUMN IF EXISTS image_url")
+	}
+
 	return db, nil
 }

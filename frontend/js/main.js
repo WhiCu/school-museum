@@ -102,10 +102,13 @@ async function loadNewsHighlight() {
         return;
     }
 
-    track.innerHTML = newsData.map(n => `
+    track.innerHTML = newsData.map(n => {
+        const imgs = n.image_urls || [];
+        const firstImg = imgs.length > 0 ? imgs[0] : '';
+        return `
         <div class="news-hl-card" onclick="openNewsModal('${n.id}')">
-            ${n.image_url
-                ? `<img src="${n.image_url}" alt="${n.title}" class="news-hl-image">`
+            ${firstImg
+                ? `<img src="${firstImg}" alt="${n.title}" class="news-hl-image">`
                 : `<div class="news-hl-image-placeholder"><span>📰</span></div>`
             }
             <div class="news-hl-body">
@@ -114,7 +117,7 @@ async function loadNewsHighlight() {
                 <p class="news-hl-text">${truncateText(n.content, 150)}</p>
             </div>
         </div>
-    `).join('');
+    `}).join('');
 
     const ctrl = initCarousel('news-hl-carousel', 'news-hl-dots');
     if (ctrl) ctrl.refresh();
@@ -343,12 +346,17 @@ async function openNewsModal(id) {
     const news = await api.getNewsById(id);
     if (!news) return;
 
+    const imgs = news.image_urls || [];
+    const imagesHtml = buildImageCarousel(imgs, news.title);
+
     body.innerHTML = `
-        ${news.image_url ? `<img src="${news.image_url}" alt="${news.title}" class="modal-image">` : ''}
+        ${imagesHtml}
         <h2 class="modal-title">${news.title}</h2>
         <div class="news-card-date" style="margin-bottom: 16px;">${formatDate(news.created_at)}</div>
         <p class="modal-description">${news.content || 'Содержание новости отсутствует'}</p>
     `;
+
+    initModalCarousel(body);
 
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';

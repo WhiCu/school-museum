@@ -141,6 +141,66 @@ function truncate(text, len = 100) {
     return text.substring(0, len) + '...';
 }
 
+// ==================== MULTI-IMAGE HELPERS ====================
+
+function addImageInput(containerId, value = '') {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const row = document.createElement('div');
+    row.className = 'multi-image-row';
+    row.innerHTML = `
+        <img class="image-preview-thumb" src="" alt="">
+        <input type="url" class="image-url-input" value="${value}" placeholder="https://...">
+        <button type="button" class="btn btn-small btn-delete" onclick="removeImageRow(this)" title="Удалить">✕</button>
+    `;
+    const input = row.querySelector('.image-url-input');
+    const thumb = row.querySelector('.image-preview-thumb');
+    input.addEventListener('input', () => updateImagePreview(input, thumb));
+    container.appendChild(row);
+    if (value) updateImagePreview(input, thumb);
+}
+
+function updateImagePreview(input, thumb) {
+    const url = input.value.trim();
+    if (!url) {
+        thumb.classList.remove('loaded');
+        thumb.src = '';
+        return;
+    }
+    const img = new Image();
+    img.onload = () => {
+        thumb.src = url;
+        thumb.classList.add('loaded');
+    };
+    img.onerror = () => {
+        thumb.classList.remove('loaded');
+        thumb.src = '';
+    };
+    img.src = url;
+}
+
+function removeImageRow(btn) {
+    const row = btn.closest('.multi-image-row');
+    const container = row.parentElement;
+    row.remove();
+    // Keep at least one empty input
+    if (container.children.length === 0) {
+        addImageInput(container.id);
+    }
+}
+
+function collectImageUrls(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return [];
+    const inputs = container.querySelectorAll('.image-url-input');
+    const urls = [];
+    inputs.forEach(input => {
+        const val = input.value.trim();
+        if (val) urls.push(val);
+    });
+    return urls;
+}
+
 // ==================== ЭКСПОЗИЦИИ ====================
 
 let exhibitionsCache = [];
@@ -264,13 +324,16 @@ async function loadAllExhibits() {
                     <div class="exhibit-group-items">
                         ${exhibits.length === 0
                             ? '<div class="empty-state" style="padding:16px;font-size:14px;">Нет экспонатов</div>'
-                            : exhibits.map(item => `
+                            : exhibits.map(item => {
+                                const imgs = item.image_urls || [];
+                                const firstImg = imgs.length > 0 ? imgs[0] : '';
+                                return `
                                 <div class="item-card">
                                     <div class="item-info">
-                                        ${item.image_url ? `<img src="${item.image_url}" class="item-thumb" alt="">` : ''}
+                                        ${firstImg ? `<img src="${firstImg}" class="item-thumb" alt="">` : ''}
                                         <div>
                                             <h3 class="item-title">${item.title}</h3>
-                                            <p class="item-desc">${truncate(item.description, 100)}</p>
+                                            <p class="item-desc">${truncate(item.description, 100)}${imgs.length > 1 ? ` · ${imgs.length} фото` : ''}</p>
                                         </div>
                                     </div>
                                     <div class="item-actions">
@@ -278,7 +341,7 @@ async function loadAllExhibits() {
                                         <button class="btn btn-small btn-delete" onclick="deleteExhibit('${item.id}')">🗑️</button>
                                     </div>
                                 </div>
-                            `).join('')
+                            `}).join('')
                         }
                     </div>
                 </div>
@@ -292,6 +355,7 @@ async function loadAllExhibits() {
 function showExhibitForm(id = null) {
     const item = id ? allExhibits.find(e => e.id === id) : null;
     const isEdit = !!item;
+    const existingUrls = isEdit ? (item.image_urls || []) : [];
 
     const exhibitionOptions = exhibitionsCache.map(ex =>
         `<option value="${ex.id}" ${item && item.exhibition_id === ex.id ? 'selected' : ''}>${ex.title}</option>`
@@ -318,8 +382,9 @@ function showExhibitForm(id = null) {
                 <textarea id="exhibit-description" rows="4">${isEdit ? (item.description || '') : ''}</textarea>
             </div>
             <div class="form-group">
-                <label>URL изображения</label>
-                <input type="url" id="exhibit-image" value="${isEdit ? (item.image_url || '') : ''}" placeholder="https://...">
+                <label>Изображения</label>
+                <div id="exhibit-images-list" class="multi-image-list"></div>
+                <button type="button" class="btn btn-small btn-secondary" onclick="addImageInput('exhibit-images-list')">+ Добавить фото</button>
             </div>
             <div class="form-actions">
                 <button type="button" class="btn btn-secondary" onclick="closeModal()">Отмена</button>
@@ -327,6 +392,11 @@ function showExhibitForm(id = null) {
             </div>
         </form>
     `;
+    if (existingUrls.length > 0) {
+        existingUrls.forEach(url => addImageInput('exhibit-images-list', url));
+    } else {
+        addImageInput('exhibit-images-list');
+    }
     openModal();
 }
 
@@ -337,7 +407,7 @@ async function saveExhibit(event, id) {
             const body = {
                 title: document.getElementById('exhibit-title').value.trim(),
                 description: document.getElementById('exhibit-description').value.trim(),
-                image_url: document.getElementById('exhibit-image').value.trim()
+                image_urls: collectImageUrls('exhibit-images-list')
             };
             await apiRequest(`${ADMIN_API}/exhibits/${id}`, 'PUT', body);
         } else {
@@ -345,7 +415,7 @@ async function saveExhibit(event, id) {
                 exhibition_id: document.getElementById('exhibit-exhibition').value,
                 title: document.getElementById('exhibit-title').value.trim(),
                 description: document.getElementById('exhibit-description').value.trim(),
-                image_url: document.getElementById('exhibit-image').value.trim()
+                image_urls: collectImageUrls('exhibit-images-list')
             };
             await apiRequest(`${ADMIN_API}/exhibits`, 'POST', body);
         }
@@ -383,14 +453,17 @@ async function loadNews() {
             return;
         }
 
-        container.innerHTML = newsCache.map(n => `
+        container.innerHTML = newsCache.map(n => {
+            const imgs = n.image_urls || [];
+            const firstImg = imgs.length > 0 ? imgs[0] : '';
+            return `
             <div class="item-card">
                 <div class="item-info">
-                    ${n.image_url ? `<img src="${n.image_url}" class="item-thumb" alt="">` : ''}
+                    ${firstImg ? `<img src="${firstImg}" class="item-thumb" alt="">` : ''}
                     <div>
                         <h3 class="item-title">${n.title}</h3>
                         <p class="item-desc">${truncate(n.content, 120)}</p>
-                        <span class="item-meta">${formatDate(n.created_at)}</span>
+                        <span class="item-meta">${formatDate(n.created_at)}${imgs.length > 1 ? ` · ${imgs.length} фото` : ''}</span>
                     </div>
                 </div>
                 <div class="item-actions">
@@ -398,7 +471,7 @@ async function loadNews() {
                     <button class="btn btn-small btn-delete" onclick="deleteNewsItem('${n.id}')">🗑️</button>
                 </div>
             </div>
-        `).join('');
+        `}).join('');
     } catch (e) {
         container.innerHTML = '<div class="error-state">Ошибка загрузки: ' + e.message + '</div>';
     }
@@ -407,6 +480,7 @@ async function loadNews() {
 function showNewsForm(id) {
     const n = id ? newsCache.find(x => x.id === id) : null;
     const isEdit = !!n;
+    const existingUrls = isEdit ? (n.image_urls || []) : [];
 
     document.getElementById('modal-title').textContent = isEdit ? 'Редактировать новость' : 'Новая новость';
     document.getElementById('modal-body').innerHTML = `
@@ -420,8 +494,9 @@ function showNewsForm(id) {
                 <textarea id="news-content" rows="6">${isEdit ? (n.content || '') : ''}</textarea>
             </div>
             <div class="form-group">
-                <label>URL изображения</label>
-                <input type="url" id="news-image" value="${isEdit ? (n.image_url || '') : ''}" placeholder="https://...">
+                <label>Изображения</label>
+                <div id="news-images-list" class="multi-image-list"></div>
+                <button type="button" class="btn btn-small btn-secondary" onclick="addImageInput('news-images-list')">+ Добавить фото</button>
             </div>
             <div class="form-actions">
                 <button type="button" class="btn btn-secondary" onclick="closeModal()">Отмена</button>
@@ -429,6 +504,12 @@ function showNewsForm(id) {
             </div>
         </form>
     `;
+    const container = document.getElementById('news-images-list');
+    if (existingUrls.length > 0) {
+        existingUrls.forEach(url => addImageInput('news-images-list', url));
+    } else {
+        addImageInput('news-images-list');
+    }
     openModal();
 }
 
@@ -437,7 +518,7 @@ async function saveNews(event, id) {
     const body = {
         title: document.getElementById('news-title').value.trim(),
         content: document.getElementById('news-content').value.trim(),
-        image_url: document.getElementById('news-image').value.trim()
+        image_urls: collectImageUrls('news-images-list')
     };
     try {
         if (id) {
