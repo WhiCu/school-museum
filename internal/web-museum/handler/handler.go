@@ -13,6 +13,7 @@ type service interface {
 	GetNewsByID(ctx context.Context, id uuid.UUID) (model.News, error)
 	GetAllExhibitions(ctx context.Context) ([]model.Exhibition, error)
 	GetExhibitionByID(ctx context.Context, id uuid.UUID) (model.Exhibition, error)
+	RecordVisit(ctx context.Context, v model.Visitor) error
 }
 
 type Handler struct {

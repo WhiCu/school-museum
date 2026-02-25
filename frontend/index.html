@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Историко-краеведческий музей «Страницы истории» — Лицей №76</title>
+    <title>Историко-краеведческий музей «Страницы истории» — Лицей №86</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -21,9 +21,8 @@
             <nav class="nav" id="nav">
                 <a href="#about" class="nav-link">О нас</a>
                 <a href="#exhibitions" class="nav-link">Экспозиции</a>
-                <a href="#news" class="nav-link">Новости</a>
+                <a href="#news-highlight" class="nav-link">Новости</a>
                 <a href="#team" class="nav-link">Руководство</a>
-                <a href="#visit" class="nav-link">Посетителям</a>
                 <a href="#contacts" class="nav-link">Контакты</a>
                 <a href="admin.html" class="nav-link nav-link--admin">Админ</a>
             </nav>
@@ -39,7 +38,7 @@
         <section class="hero" id="hero">
             <div class="hero-overlay"></div>
             <div class="hero-content">
-                <p class="hero-badge">Лицей №76 г. Ярославля</p>
+                <p class="hero-badge">Лицей №86 г. Ярославля</p>
                 <h1 class="hero-title">Историко-краеведческий музей<br>«Страницы истории»</h1>
                 <p class="hero-subtitle">Интерактивное пространство, где прошлое оживает</p>
                 <a href="#about" class="hero-btn">Узнать больше</a>
@@ -57,7 +56,7 @@
                 <h2 class="section-title">Добро пожаловать в наш музей</h2>
                 <div class="about-content">
                     <div class="about-text">
-                        <p>Музей «Страницы истории» находится в Лицее №76. С начала своего существования музей образует вокруг себя круг неравнодушных краеведов и интересует каждого посетителя Лицея.</p>
+                        <p>Музей «Страницы истории» находится в Лицее №86. С начала своего существования музей образует вокруг себя круг неравнодушных краеведов и интересует каждого посетителя Лицея.</p>
                         <p>Начав работу в 2018 году, наш музей собрал уникальную коллекцию экспонатов, отражающих историю Ярославского края. Предлагаем и вам окунуться в увлекательную историю нашего региона.</p>
                     </div>
                     <div class="about-image">
@@ -110,27 +109,6 @@
             </div>
         </section>
 
-        <!-- ═══════════ НОВОСТИ ═══════════ -->
-        <section class="section news" id="news">
-            <div class="container">
-                <div class="section-label">Актуальное</div>
-                <h2 class="section-title">Новости музея</h2>
-                <div class="carousel" id="news-carousel">
-                    <button class="carousel-arrow carousel-arrow--prev" data-dir="prev" aria-label="Назад">‹</button>
-                    <div class="carousel-viewport">
-                        <div class="carousel-track" id="news-container">
-                            <div class="loading-state">
-                                <div class="spinner"></div>
-                                <p>Загрузка новостей...</p>
-                            </div>
-                        </div>
-                    </div>
-                    <button class="carousel-arrow carousel-arrow--next" data-dir="next" aria-label="Вперёд">›</button>
-                    <div class="carousel-dots" id="news-dots"></div>
-                </div>
-            </div>
-        </section>
-
         <!-- ═══════════ РУКОВОДСТВО ═══════════ -->
         <section class="section team" id="team">
             <div class="container">
@@ -138,51 +116,34 @@
                 <h2 class="section-title">Руководство музея</h2>
                 <div class="team-grid">
                     <div class="team-card">
-                        <div class="team-avatar">
-                            <span class="team-avatar-icon">👩‍🏫</span>
+                        <div class="team-photo">
+                            <img src="" alt="Руководитель музея" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                            <div class="team-photo-placeholder">
+                                <span>👩‍🏫</span>
+                            </div>
                         </div>
                         <h3 class="team-name">Руководитель музея</h3>
-                        <p class="team-role">Глава музея «Страницы истории», учитель истории и обществознания Лицея №76</p>
+                        <p class="team-role">Глава музея «Страницы истории», учитель истории и обществознания Лицея №86</p>
                     </div>
                     <div class="team-card">
-                        <div class="team-avatar">
-                            <span class="team-avatar-icon">🎓</span>
+                        <div class="team-photo">
+                            <img src="" alt="Старший экскурсовод" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                            <div class="team-photo-placeholder">
+                                <span>🎓</span>
+                            </div>
                         </div>
                         <h3 class="team-name">Старший экскурсовод</h3>
                         <p class="team-role">Активист музея, ведущий экскурсовод по всем экспозициям</p>
                     </div>
                     <div class="team-card">
-                        <div class="team-avatar">
-                            <span class="team-avatar-icon">💻</span>
+                        <div class="team-photo">
+                            <img src="" alt="Тех. администратор" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                            <div class="team-photo-placeholder">
+                                <span>💻</span>
+                            </div>
                         </div>
                         <h3 class="team-name">Тех. администратор</h3>
                         <p class="team-role">Активист музея, отвечает за техническую поддержку и онлайн-ресурсы</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ═══════════ ПОСЕТИТЕЛЯМ ═══════════ -->
-        <section class="section visit" id="visit">
-            <div class="container">
-                <div class="section-label">Интерактив</div>
-                <h2 class="section-title">Уголок посетителя</h2>
-                <p class="section-subtitle">Для тех, кому не достаточно школьной программы</p>
-                <div class="visit-grid">
-                    <div class="visit-card">
-                        <div class="visit-card-icon">🧩</div>
-                        <h3>Викторины</h3>
-                        <p>Знали ли вы, какую музыку слушали ваши родители? Что содержал портфель лицеиста более века назад? Для любознательных — увлекательные викторины.</p>
-                    </div>
-                    <div class="visit-card">
-                        <div class="visit-card-icon">🖥</div>
-                        <h3>Онлайн-посещение</h3>
-                        <p>Вы можете посетить наш музей, не отходя от экрана. Виртуальные туры и интерактивные экспозиции доступны онлайн.</p>
-                    </div>
-                    <div class="visit-card">
-                        <div class="visit-card-icon">📝</div>
-                        <h3>Тесты</h3>
-                        <p>Если вы решили серьёзно погрузиться в изучение истории, то этот раздел создан для вас. Проверьте свои знания!</p>
                     </div>
                 </div>
             </div>
@@ -195,7 +156,7 @@
                     <div class="contacts-info">
                         <div class="section-label">Контакты</div>
                         <h2 class="section-title section-title--left">Приходите к нам в гости!</h2>
-                        <p class="contacts-desc">Команда музея «Страницы истории» ждёт вас! Наш музей находится в здании Лицея №76 г. Ярославля.</p>
+                        <p class="contacts-desc">Команда музея «Страницы истории» ждёт вас! Наш музей находится в здании Лицея №86 г. Ярославля.</p>
                         <div class="contacts-list">
                             <div class="contact-item">
                                 <span class="contact-icon">📍</span>
@@ -207,19 +168,13 @@
                             </div>
                             <div class="contact-item">
                                 <span class="contact-icon">✉️</span>
-                                <a href="mailto:museum@licey76.ru">museum@licey76.ru</a>
+                                <a href="mailto:museum@licey86.ru">museum@licey86.ru</a>
                             </div>
                         </div>
-                        <div class="contacts-socials">
-                            <a href="#" class="social-link" title="ВКонтакте">VK</a>
-                            <a href="#" class="social-link" title="Telegram">TG</a>
-                        </div>
+
                     </div>
                     <div class="contacts-map">
-                        <div class="map-placeholder">
-                            <span class="map-icon">🗺</span>
-                            <p>Карта</p>
-                        </div>
+                        <div id="yandex-map" style="width:100%;aspect-ratio:4/3;border-radius:16px;overflow:hidden;"></div>
                     </div>
                 </div>
             </div>
@@ -235,7 +190,7 @@
                     <span class="footer-logo">🏛</span>
                     <span>Музей «Страницы истории»</span>
                 </div>
-                <p class="footer-copy">&copy; 2026 Лицей №76 г. Ярославля. Все права защищены.</p>
+                <p class="footer-copy">&copy; 2026 Лицей №86 г. Ярославля. Все права защищены.</p>
             </div>
         </div>
     </footer>
@@ -248,6 +203,7 @@
         </div>
     </div>
 
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=cf69ea2b-c5a4-43d5-a511-a35aeefad7e3&lang=ru_RU" type="text/javascript"></script>
     <script src="js/api.js"></script>
     <script src="js/main.js"></script>
 </body>

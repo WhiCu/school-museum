@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initHeader();
     initBurger();
     initExhibitModal();
+    trackVisit();
 
     const urlParams = new URLSearchParams(window.location.search);
     const exhibitionId = urlParams.get('id');
@@ -165,6 +166,23 @@ function closeExhibitModal() {
         modal.classList.remove('active');
         document.body.style.overflow = '';
     }
+}
+
+// ── Track page visit ──
+function trackVisit() {
+    const data = {
+        page: window.location.pathname + window.location.search,
+        referrer: document.referrer || '',
+        screen_width: window.screen.width || 0,
+        screen_height: window.screen.height || 0,
+        language: navigator.language || navigator.userLanguage || ''
+    };
+
+    fetch('/museum/visit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    }).catch(() => {});
 }
 
 // ── Error ──

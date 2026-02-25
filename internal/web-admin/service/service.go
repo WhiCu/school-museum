@@ -25,6 +25,8 @@ type Storage interface {
 	CreateExhibit(ctx context.Context, e model.Exhibit) (model.Exhibit, error)
 	UpdateExhibit(ctx context.Context, e model.Exhibit) (model.Exhibit, error)
 	DeleteExhibit(ctx context.Context, id uuid.UUID) error
+
+	GetStats(ctx context.Context) (model.VisitStats, error)
 }
 
 type Service struct {
@@ -82,4 +84,10 @@ func (s *Service) UpdateExhibit(ctx context.Context, e model.Exhibit) (model.Exh
 
 func (s *Service) DeleteExhibit(ctx context.Context, id uuid.UUID) error {
 	return s.storage.DeleteExhibit(ctx, id)
+}
+
+// --- Stats ---
+
+func (s *Service) GetStats(ctx context.Context) (model.VisitStats, error) {
+	return s.storage.GetStats(ctx)
 }

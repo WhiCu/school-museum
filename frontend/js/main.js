@@ -8,9 +8,27 @@ document.addEventListener('DOMContentLoaded', () => {
     initScrollAnimations();
     loadNewsHighlight();
     loadExhibitions();
-    loadNews();
     initNewsModal();
+    initYandexMap();
+    trackVisit();
 });
+
+// ── Track page visit ──
+function trackVisit() {
+    const data = {
+        page: window.location.pathname,
+        referrer: document.referrer || '',
+        screen_width: window.screen.width || 0,
+        screen_height: window.screen.height || 0,
+        language: navigator.language || navigator.userLanguage || ''
+    };
+
+    fetch('/museum/visit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    }).catch(() => {});
+}
 
 // ── Header scroll effect ──
 function initHeader() {
@@ -86,9 +104,15 @@ async function loadNewsHighlight() {
 
     track.innerHTML = newsData.map(n => `
         <div class="news-hl-card" onclick="openNewsModal('${n.id}')">
-            <div class="news-card-date">${formatDate(n.created_at)}</div>
-            <h3 class="news-hl-title">${n.title}</h3>
-            <p class="news-hl-text">${truncateText(n.content, 150)}</p>
+            ${n.image_url
+                ? `<img src="${n.image_url}" alt="${n.title}" class="news-hl-image">`
+                : `<div class="news-hl-image-placeholder"><span>📰</span></div>`
+            }
+            <div class="news-hl-body">
+                <div class="news-card-date">${formatDate(n.created_at)}</div>
+                <h3 class="news-hl-title">${n.title}</h3>
+                <p class="news-hl-text">${truncateText(n.content, 150)}</p>
+            </div>
         </div>
     `).join('');
 
@@ -294,36 +318,6 @@ function openExhibition(id) {
     window.location.href = `exhibition.html?id=${id}`;
 }
 
-// ── Load News ──
-async function loadNews() {
-    const container = document.getElementById('news-container');
-    if (!container) return;
-
-    const newsData = await api.getAllNews();
-
-    if (!newsData || newsData.length === 0) {
-        container.innerHTML = '<div class="empty-state">Новости пока отсутствуют</div>';
-        return;
-    }
-
-    container.innerHTML = newsData.map(news => `
-        <div class="news-card" onclick="openNewsModal('${news.id}')">
-            ${news.image_url
-                ? `<img src="${news.image_url}" alt="${news.title}" class="news-card-image">`
-                : `<div class="news-card-image-placeholder"><span>📰</span></div>`
-            }
-            <div class="news-card-body">
-                <div class="news-card-date">${formatDate(news.created_at)}</div>
-                <h3 class="news-card-title">${news.title}</h3>
-                <p class="news-card-text">${truncateText(news.content, 150)}</p>
-            </div>
-        </div>
-    `).join('');
-
-    const ctrl = initCarousel('news-carousel', 'news-dots');
-    if (ctrl) ctrl.refresh();
-}
-
 // ── News Modal ──
 let newsCache = [];
 
@@ -366,4 +360,29 @@ function closeNewsModal() {
         modal.classList.remove('active');
         document.body.style.overflow = '';
     }
+}
+
+// ── Yandex Map ──
+function initYandexMap() {
+    if (typeof ymaps === 'undefined') return;
+
+    ymaps.ready(() => {
+        const map = new ymaps.Map('yandex-map', {
+            center: [57.581944, 39.839645], // Ярославль, ул. Зелинского, 6
+            zoom: 16,
+            controls: ['zoomControl', 'geolocationControl']
+        });
+
+        const placemark = new ymaps.Placemark([57.581944, 39.839645], {
+            hintContent: 'Лицей №86',
+            balloonContentHeader: 'Музей «Страницы истории»',
+            balloonContentBody: 'г. Ярославль, ул. Зелинского, 6<br>Лицей №86',
+            balloonContentFooter: '+7 (905) 646-41-27'
+        }, {
+            preset: 'islands#redEducationIcon'
+        });
+
+        map.geoObjects.add(placemark);
+        map.behaviors.disable('scrollZoom');
+    });
 }

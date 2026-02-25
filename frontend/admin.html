@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -12,19 +12,41 @@
 </head>
 <body class="admin-body">
 
+    <!-- ═══════════ LOGIN SCREEN ═══════════ -->
+    <div id="login-screen" class="login-screen">
+        <div class="login-card">
+            <div class="login-icon">🏛</div>
+            <h2 class="login-title">Панель управления</h2>
+            <p class="login-subtitle">Введите логин и пароль администратора</p>
+            <form id="login-form" class="login-form">
+                <div class="form-group">
+                    <label for="login-username">Логин</label>
+                    <input type="text" id="login-username" placeholder="admin" autocomplete="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Пароль</label>
+                    <input type="password" id="login-password" placeholder="••••••" autocomplete="current-password" required>
+                </div>
+                <div id="login-error" class="login-error" style="display:none;"></div>
+                <button type="submit" class="btn btn-primary login-btn">Войти</button>
+            </form>
+        </div>
+    </div>
+
     <!-- ═══════════ HEADER ═══════════ -->
-    <header class="admin-header">
+    <header class="admin-header admin-hidden" id="admin-main">
         <div class="admin-header-inner">
             <a href="index.html" class="admin-back">
                 <span class="admin-back-arrow">←</span>
                 <span>На сайт</span>
             </a>
             <span class="admin-brand-title">🏛 Панель управления</span>
+            <button class="btn btn-small btn-logout" id="btn-logout" title="Выйти">🚪 Выход</button>
         </div>
     </header>
 
     <!-- ═══════════ LAYOUT ═══════════ -->
-    <div class="admin-layout">
+    <div class="admin-layout admin-hidden" id="admin-layout">
 
         <!-- Sidebar -->
         <aside class="admin-sidebar" id="admin-sidebar">
@@ -55,33 +77,101 @@
             <div id="section-stats" class="admin-section active">
                 <div class="section-header">
                     <h2>Статистика посещений</h2>
+                    <button class="btn btn-small btn-secondary" onclick="loadAdminStats()" title="Обновить">🔄 Обновить</button>
                 </div>
                 <div id="stats-panel" class="stats-panel">
+
+                    <!-- Посещения по периодам -->
+                    <h3 class="stats-group-title">Уникальные посетители (по последнему заходу)</h3>
                     <div class="stats-cards" id="stats-cards">
                         <div class="admin-stat-card">
+                            <div class="admin-stat-icon">📅</div>
+                            <div class="admin-stat-value" id="admin-stat-today">&mdash;</div>
+                            <div class="admin-stat-label">Сегодня</div>
+                        </div>
+                        <div class="admin-stat-card">
+                            <div class="admin-stat-icon">📆</div>
+                            <div class="admin-stat-value" id="admin-stat-week">&mdash;</div>
+                            <div class="admin-stat-label">За неделю</div>
+                        </div>
+                        <div class="admin-stat-card">
+                            <div class="admin-stat-icon">🗓️</div>
+                            <div class="admin-stat-value" id="admin-stat-month">&mdash;</div>
+                            <div class="admin-stat-label">За месяц</div>
+                        </div>
+                        <div class="admin-stat-card">
                             <div class="admin-stat-icon">👁️</div>
-                            <div class="admin-stat-value" id="admin-stat-views">—</div>
-                            <div class="admin-stat-label">Просмотров сегодня</div>
+                            <div class="admin-stat-value" id="admin-stat-total">&mdash;</div>
+                            <div class="admin-stat-label">Всего</div>
                         </div>
-                        <div class="admin-stat-card">
-                            <div class="admin-stat-icon">👥</div>
-                            <div class="admin-stat-value" id="admin-stat-visitors">—</div>
-                            <div class="admin-stat-label">Посетителей сегодня</div>
+                    </div>
+
+                    <!-- Новые посетители -->
+                    <h3 class="stats-group-title">Новые посетители (впервые на сайте)</h3>
+                    <div class="stats-cards">
+                        <div class="admin-stat-card card-accent-green">
+                            <div class="admin-stat-icon">🆕</div>
+                            <div class="admin-stat-value" id="admin-stat-new-today">&mdash;</div>
+                            <div class="admin-stat-label">Сегодня</div>
                         </div>
-                        <div class="admin-stat-card">
-                            <div class="admin-stat-icon">🗂️</div>
-                            <div class="admin-stat-value" id="admin-stat-exhibitions">—</div>
+                        <div class="admin-stat-card card-accent-green">
+                            <div class="admin-stat-icon">🆕</div>
+                            <div class="admin-stat-value" id="admin-stat-new-week">&mdash;</div>
+                            <div class="admin-stat-label">За неделю</div>
+                        </div>
+                        <div class="admin-stat-card card-accent-green">
+                            <div class="admin-stat-icon">🆕</div>
+                            <div class="admin-stat-value" id="admin-stat-new-month">&mdash;</div>
+                            <div class="admin-stat-label">За месяц</div>
+                        </div>
+                    </div>
+
+                    <!-- Вовлечённость -->
+                    <h3 class="stats-group-title">Вовлечённость</h3>
+                    <div class="stats-cards">
+                        <div class="admin-stat-card card-accent-purple">
+                            <div class="admin-stat-icon">🔁</div>
+                            <div class="admin-stat-value" id="admin-stat-returning">&mdash;</div>
+                            <div class="admin-stat-label">Вернувшиеся</div>
+                        </div>
+                        <div class="admin-stat-card card-accent-purple">
+                            <div class="admin-stat-icon">📄</div>
+                            <div class="admin-stat-value" id="admin-stat-pageviews">&mdash;</div>
+                            <div class="admin-stat-label">Всего просмотров</div>
+                        </div>
+                        <div class="admin-stat-card card-accent-purple">
+                            <div class="admin-stat-icon">📊</div>
+                            <div class="admin-stat-value" id="admin-stat-avg">&mdash;</div>
+                            <div class="admin-stat-label">Среднее визитов</div>
+                        </div>
+                    </div>
+
+                    <!-- График за 7 дней -->
+                    <h3 class="stats-group-title">Посещения за последние 7 дней</h3>
+                    <div class="stats-chart-container" id="stats-chart-container">
+                        <div class="stats-chart" id="stats-chart"></div>
+                    </div>
+
+                    <!-- Контент -->
+                    <h3 class="stats-group-title">Контент музея</h3>
+                    <div class="stats-cards stats-cards-secondary" id="stats-cards-secondary">
+                        <div class="admin-stat-card card-accent-blue">
+                            <div class="admin-stat-icon">🏛️</div>
+                            <div class="admin-stat-value" id="admin-stat-exhibitions">&mdash;</div>
                             <div class="admin-stat-label">Экспозиций</div>
                         </div>
-                        <div class="admin-stat-card">
+                        <div class="admin-stat-card card-accent-blue">
+                            <div class="admin-stat-icon">🖼️</div>
+                            <div class="admin-stat-value" id="admin-stat-exhibits">&mdash;</div>
+                            <div class="admin-stat-label">Экспонатов</div>
+                        </div>
+                        <div class="admin-stat-card card-accent-blue">
                             <div class="admin-stat-icon">📰</div>
-                            <div class="admin-stat-value" id="admin-stat-news">—</div>
+                            <div class="admin-stat-value" id="admin-stat-news">&mdash;</div>
                             <div class="admin-stat-label">Новостей</div>
                         </div>
                     </div>
-                    <div class="stats-iframe-wrap" id="stats-iframe-wrap">
-                        <p class="stats-hint">Для подробной статистики посещений подключите Umami аналитику в настройках сервера (telemetry.umami).</p>
-                    </div>
+
                 </div>
             </div>
 

@@ -5,6 +5,87 @@
 const ADMIN_API = '/admin';
 const MUSEUM_API = '/museum';
 
+// ==================== АВТОРИЗАЦИЯ ====================
+
+function getAuthHeader() {
+    const creds = sessionStorage.getItem('admin_auth');
+    return creds ? 'Basic ' + creds : '';
+}
+
+function isLoggedIn() {
+    return !!sessionStorage.getItem('admin_auth');
+}
+
+function showAdmin() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-main').classList.remove('admin-hidden');
+    document.getElementById('admin-layout').classList.remove('admin-hidden');
+}
+
+function showLogin() {
+    document.getElementById('login-screen').style.display = '';
+    document.getElementById('admin-main').classList.add('admin-hidden');
+    document.getElementById('admin-layout').classList.add('admin-hidden');
+    sessionStorage.removeItem('admin_auth');
+}
+
+// Login form
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const login = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value;
+    const errorEl = document.getElementById('login-error');
+
+    errorEl.style.display = 'none';
+
+    const creds = btoa(login + ':' + password);
+
+    try {
+        const resp = await fetch(`${ADMIN_API}/ping?message=ping`, {
+            headers: { 'Authorization': 'Basic ' + creds }
+        });
+
+        if (resp.ok) {
+            sessionStorage.setItem('admin_auth', creds);
+            showAdmin();
+            initAdminData();
+        } else {
+            errorEl.textContent = 'Неверный логин или пароль';
+            errorEl.style.display = 'block';
+        }
+    } catch (err) {
+        errorEl.textContent = 'Ошибка подключения к серверу';
+        errorEl.style.display = 'block';
+    }
+});
+
+// Logout
+document.getElementById('btn-logout').addEventListener('click', () => {
+    showLogin();
+});
+
+// Check if already authenticated
+if (isLoggedIn()) {
+    // Verify session is still valid
+    fetch(`${ADMIN_API}/ping?message=ping`, {
+        headers: { 'Authorization': getAuthHeader() }
+    }).then(resp => {
+        if (resp.ok) {
+            showAdmin();
+            initAdminData();
+        } else {
+            showLogin();
+        }
+    }).catch(() => showLogin());
+}
+
+function initAdminData() {
+    loadExhibitions();
+    loadAllExhibits();
+    loadNews();
+    loadAdminStats();
+}
+
 // ==================== Навигация ====================
 
 document.querySelectorAll('.sidebar-item').forEach(item => {
@@ -17,24 +98,27 @@ document.querySelectorAll('.sidebar-item').forEach(item => {
     });
 });
 
-// ==================== Инициализация ====================
-
-document.addEventListener('DOMContentLoaded', () => {
-    loadExhibitions();
-    loadAllExhibits();
-    loadNews();
-    loadAdminStats();
-});
-
 // ==================== Общие утилиты ====================
 
 async function apiRequest(url, method = 'GET', body = null) {
     const opts = { method, headers: {} };
+
+    // Add auth header for admin API calls
+    if (url.startsWith(ADMIN_API)) {
+        opts.headers['Authorization'] = getAuthHeader();
+    }
+
     if (body) {
         opts.headers['Content-Type'] = 'application/json';
         opts.body = JSON.stringify(body);
     }
     const resp = await fetch(url, opts);
+
+    if (resp.status === 401) {
+        showLogin();
+        throw new Error('Сессия истекла, войдите снова');
+    }
+
     if (method === 'DELETE') {
         if (!resp.ok) throw new Error('Ошибка удаления');
         return null;
@@ -65,7 +149,7 @@ async function loadExhibitions() {
     const container = document.getElementById('exhibitions-list');
     try {
         const data = await apiRequest(`${MUSEUM_API}/exhibitions`);
-        exhibitionsCache = Array.isArray(data) ? data : (data.exhibitions || []);
+        exhibitionsCache = Array.isArray(data) ? data : (data && data.exhibitions ? data.exhibitions : []);
 
         if (exhibitionsCache.length === 0) {
             container.innerHTML = '<div class="empty-state">Экспозиций пока нет</div>';
@@ -154,7 +238,7 @@ async function loadAllExhibits() {
     try {
         // Загружаем все экспозиции с экспонатами
         const data = await apiRequest(`${MUSEUM_API}/exhibitions`);
-        const exhibitions = Array.isArray(data) ? data : (data.exhibitions || []);
+        const exhibitions = Array.isArray(data) ? data : (data && data.exhibitions ? data.exhibitions : []);
 
         allExhibits = [];
         exhibitions.forEach(ex => {
@@ -292,7 +376,7 @@ async function loadNews() {
     const container = document.getElementById('news-list');
     try {
         const data = await apiRequest(`${MUSEUM_API}/news`);
-        newsCache = Array.isArray(data) ? data : (data.news || []);
+        newsCache = Array.isArray(data) ? data : (data && data.news ? data.news : []);
 
         if (newsCache.length === 0) {
             container.innerHTML = '<div class="empty-state">Новостей пока нет</div>';
@@ -381,47 +465,74 @@ async function deleteNewsItem(id) {
 // ==================== СТАТИСТИКА ====================
 
 async function loadAdminStats() {
-    // Подсчёт экспозиций и новостей
     try {
-        const exData = await apiRequest(`${MUSEUM_API}/exhibitions`);
-        const exhibitions = Array.isArray(exData) ? exData : (exData.exhibitions || []);
-        const el = document.getElementById('admin-stat-exhibitions');
-        if (el) el.textContent = exhibitions.length;
-    } catch (_) {}
+        const data = await apiRequest(`${ADMIN_API}/stats`);
+        if (!data) return;
 
-    try {
-        const nData = await apiRequest(`${MUSEUM_API}/news`);
-        const news = Array.isArray(nData) ? nData : (nData.news || []);
-        const el = document.getElementById('admin-stat-news');
-        if (el) el.textContent = news.length;
-    } catch (_) {}
+        const set = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = val != null ? val : 0;
+        };
 
-    // Umami аналитика — загрузка дашборда
-    try {
-        const resp = await fetch('/analytics');
-        if (!resp.ok) return;
-        const config = await resp.json();
-        if (!config.url || !config.website_id) return;
+        // Visitors by last visit
+        set('admin-stat-total', data.total_visits);
+        set('admin-stat-today', data.today_visits);
+        set('admin-stat-week', data.week_visits);
+        set('admin-stat-month', data.month_visits);
 
-        // Загрузка статистики через Umami share URL
-        const wrap = document.getElementById('stats-iframe-wrap');
-        if (wrap) {
-            wrap.innerHTML = `<iframe src="${config.url}/share/${config.website_id}" title="Статистика посещений"></iframe>`;
-        }
+        // New visitors by first visit
+        set('admin-stat-new-today', data.new_today);
+        set('admin-stat-new-week', data.new_week);
+        set('admin-stat-new-month', data.new_month);
 
-        // Попытка загрузить сводные цифры через API
-        const today = new Date().toISOString().slice(0, 10);
-        const statsResp = await fetch(`${config.url}/api/websites/${config.website_id}/stats?startAt=${new Date(today).getTime()}&endAt=${Date.now()}`);
-        if (statsResp.ok) {
-            const stats = await statsResp.json();
-            const views = document.getElementById('admin-stat-views');
-            const visitors = document.getElementById('admin-stat-visitors');
-            if (views && stats.pageviews != null) views.textContent = stats.pageviews.value;
-            if (visitors && stats.visitors != null) visitors.textContent = stats.visitors.value;
-        }
-    } catch (_) {
-        // Umami не настроен — оставляем подсказку
+        // Engagement
+        set('admin-stat-returning', data.returning_visitors);
+        set('admin-stat-pageviews', data.total_page_views);
+        set('admin-stat-avg', data.avg_visits_per_user != null
+            ? data.avg_visits_per_user.toFixed(1)
+            : '0');
+
+        // Entity counts
+        set('admin-stat-exhibitions', data.exhibition_count);
+        set('admin-stat-exhibits', data.exhibit_count);
+        set('admin-stat-news', data.news_count);
+
+        // Daily chart
+        renderDailyChart(data.daily_visits || []);
+    } catch (err) {
+        console.error('Failed to load stats', err);
     }
+}
+
+function renderDailyChart(dailyVisits) {
+    const container = document.getElementById('stats-chart');
+    if (!container) return;
+
+    if (!dailyVisits.length) {
+        container.innerHTML = '<div class="chart-empty">Нет данных за последние 7 дней</div>';
+        return;
+    }
+
+    const maxCount = Math.max(...dailyVisits.map(d => d.count), 1);
+    const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+
+    const bars = dailyVisits.map(d => {
+        const pct = Math.round((d.count / maxCount) * 100);
+        const dt = new Date(d.date + 'T00:00:00');
+        const dayLabel = dayNames[dt.getDay()];
+        const dateLabel = dt.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+        return `
+            <div class="chart-col">
+                <div class="chart-value">${d.count}</div>
+                <div class="chart-bar-wrap">
+                    <div class="chart-bar" style="height:${Math.max(pct, 4)}%"></div>
+                </div>
+                <div class="chart-day">${dayLabel}</div>
+                <div class="chart-date">${dateLabel}</div>
+            </div>`;
+    }).join('');
+
+    container.innerHTML = bars;
 }
 
 // ==================== ГРУППИРОВКА ====================

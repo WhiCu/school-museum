@@ -423,15 +423,42 @@ a {
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
-    padding: 32px 28px;
+    overflow: hidden;
     text-align: left;
     cursor: pointer;
     transition: background 0.3s, transform 0.3s;
+    display: flex;
+    flex-direction: column;
 }
 
 .news-hl-card:hover {
     background: rgba(255, 255, 255, 0.1);
     transform: translateY(-4px);
+}
+
+.news-hl-image {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    display: block;
+}
+
+.news-hl-image-placeholder {
+    width: 100%;
+    height: 180px;
+    background: rgba(255, 255, 255, 0.04);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.news-hl-image-placeholder span {
+    font-size: 40px;
+    opacity: 0.2;
+}
+
+.news-hl-body {
+    padding: 24px 24px 28px;
 }
 
 .news-hl-card .news-card-date {
@@ -789,16 +816,17 @@ a {
 .team-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 32px;
+    gap: 28px;
     margin-top: 48px;
 }
 
 .team-card {
     background: #fff;
     border-radius: 16px;
-    padding: 40px 28px 32px;
+    overflow: hidden;
     border: 1px solid #eee;
     transition: transform 0.3s, box-shadow 0.3s;
+    text-align: center;
 }
 
 .team-card:hover {
@@ -806,90 +834,65 @@ a {
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.06);
 }
 
-.team-avatar {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #1a1a2e, #0f3460);
+.team-photo {
+    width: 100%;
+    height: 220px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+}
+
+.team-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.team-photo-placeholder {
+    position: absolute;
+    inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 20px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
 }
 
-.team-avatar-icon {
-    font-size: 32px;
+.team-photo-placeholder span {
+    font-size: 56px;
+    opacity: 0.5;
 }
 
 .team-name {
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 600;
     color: #1a1a2e;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
+    padding: 20px 20px 0;
 }
 
 .team-role {
-    font-size: 14px;
+    font-size: 13px;
     color: #888;
     line-height: 1.6;
+    padding: 0 20px 24px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 960px) {
     .team-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
         gap: 20px;
     }
 }
 
-/* ═══════════ VISIT ═══════════ */
-
-.visit {
-    background: #fff;
-    text-align: center;
-}
-
-.visit-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 28px;
-    margin-top: 48px;
-}
-
-.visit-card {
-    background: linear-gradient(135deg, #faf9f6, #f5f1ea);
-    border-radius: 16px;
-    padding: 36px 28px;
-    border: 1px solid #eee;
-    text-align: left;
-    transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.visit-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.06);
-}
-
-.visit-card-icon {
-    font-size: 36px;
-    margin-bottom: 16px;
-}
-
-.visit-card h3 {
-    font-size: 18px;
-    font-weight: 600;
-    color: #1a1a2e;
-    margin-bottom: 10px;
-}
-
-.visit-card p {
-    font-size: 14px;
-    color: #777;
-    line-height: 1.7;
-}
-
-@media (max-width: 768px) {
-    .visit-grid {
+@media (max-width: 520px) {
+    .team-grid {
         grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .team-photo {
+        height: 180px;
     }
 }
 
@@ -1328,4 +1331,357 @@ a {
 .fade-in.visible {
     opacity: 1;
     transform: translateY(0);
+}
+
+/* ═══════════ MOBILE RESPONSIVE ═══════════ */
+
+/* — Tablets & small desktops — */
+@media (max-width: 768px) {
+    .section {
+        padding: 56px 0;
+    }
+
+    .section-subtitle {
+        font-size: 15px;
+        margin-bottom: 36px;
+    }
+
+    .carousel {
+        margin-top: 32px;
+    }
+
+    .hero-subtitle {
+        font-size: 16px;
+    }
+
+    .hero-btn {
+        padding: 12px 28px;
+        font-size: 13px;
+    }
+
+    .hero-scroll {
+        bottom: 20px;
+    }
+
+    /* Modal mobile */
+    .modal-overlay {
+        padding: 12px;
+        align-items: flex-end;
+    }
+
+    .modal-dialog {
+        max-width: 100%;
+        border-radius: 20px 20px 0 0;
+        max-height: 92vh;
+    }
+
+    .modal-header {
+        padding: 20px 20px 0;
+    }
+
+    .modal-body {
+        padding: 16px 20px 24px;
+    }
+
+    .modal-title {
+        font-size: 20px;
+    }
+
+    .modal-description {
+        font-size: 14px;
+    }
+
+    /* News highlight body smaller padding */
+    .news-hl-body {
+        padding: 18px 18px 22px;
+    }
+
+    .news-hl-card .news-hl-title {
+        font-size: 17px;
+    }
+
+    /* Map height on mobile */
+    #yandex-map {
+        min-height: 280px;
+    }
+
+    /* Exhibition page */
+    .ex-hero {
+        min-height: 40vh;
+    }
+
+    .ex-hero-content {
+        padding: 40px 20px 32px;
+    }
+
+    .ex-hero-title {
+        font-size: clamp(24px, 5vw, 36px);
+    }
+
+    .ex-hero-desc {
+        font-size: 15px;
+    }
+
+    .exhibits-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 16px;
+        margin-top: 28px;
+    }
+}
+
+/* — Small phones — */
+@media (max-width: 480px) {
+    .container {
+        padding: 0 16px;
+    }
+
+    .section {
+        padding: 40px 0;
+    }
+
+    .section-label {
+        font-size: 10px;
+        letter-spacing: 2px;
+    }
+
+    .section-subtitle {
+        font-size: 14px;
+        margin-bottom: 28px;
+    }
+
+    /* Header */
+    .header-inner {
+        padding: 0 16px;
+        height: 56px;
+    }
+
+    .logo {
+        font-size: 13px;
+        gap: 8px;
+    }
+
+    .logo-icon {
+        font-size: 18px;
+    }
+
+    /* Hero */
+    .hero {
+        min-height: 85vh;
+    }
+
+    .hero-content {
+        padding: 24px 16px;
+    }
+
+    .hero-badge {
+        font-size: 10px;
+        padding: 5px 14px;
+        margin-bottom: 20px;
+    }
+
+    .hero-subtitle {
+        font-size: 14px;
+        margin-bottom: 28px;
+    }
+
+    .hero-btn {
+        padding: 12px 24px;
+        font-size: 13px;
+    }
+
+    .hero-scroll {
+        display: none;
+    }
+
+    /* About */
+    .about-text p {
+        font-size: 14px;
+        line-height: 1.75;
+    }
+
+    .about-image-placeholder {
+        aspect-ratio: 16/10;
+    }
+
+    .about-icon {
+        font-size: 48px;
+    }
+
+    /* News highlight */
+    .news-highlight {
+        padding: 40px 0;
+    }
+
+    .news-hl-image,
+    .news-hl-image-placeholder {
+        height: 150px;
+    }
+
+    .news-hl-body {
+        padding: 14px 14px 18px;
+    }
+
+    .news-hl-card .news-hl-title {
+        font-size: 16px;
+    }
+
+    .news-hl-card .news-hl-text {
+        font-size: 13px;
+    }
+
+    /* Carousel dots touch-friendly */
+    .carousel-dots {
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .carousel-dot {
+        width: 12px;
+        height: 12px;
+    }
+
+    /* Exhibition cards */
+    .exhibition-card-body {
+        padding: 16px;
+    }
+
+    .exhibition-card-title {
+        font-size: 17px;
+    }
+
+    .exhibition-card-desc {
+        font-size: 13px;
+    }
+
+    .exhibition-card-image {
+        min-height: 160px;
+    }
+
+    /* Team */
+    .team-grid {
+        margin-top: 32px;
+    }
+
+    .team-name {
+        font-size: 15px;
+        padding: 14px 14px 0;
+    }
+
+    .team-role {
+        font-size: 12px;
+        padding: 0 14px 18px;
+    }
+
+    /* Contacts */
+    .contacts-desc {
+        font-size: 14px;
+    }
+
+    .contact-item {
+        font-size: 14px;
+    }
+
+    /* Footer */
+    .footer {
+        padding: 24px 0;
+    }
+
+    .footer-brand {
+        font-size: 13px;
+    }
+
+    /* Modal full-screen feel */
+    .modal-overlay {
+        padding: 0;
+    }
+
+    .modal-dialog {
+        border-radius: 16px 16px 0 0;
+        max-height: 95vh;
+    }
+
+    .modal-header {
+        padding: 16px 16px 0;
+    }
+
+    .modal-body {
+        padding: 12px 16px 20px;
+    }
+
+    .modal-close {
+        width: 32px;
+        height: 32px;
+        font-size: 18px;
+        top: 12px;
+        right: 12px;
+    }
+
+    /* Exhibition page */
+    .ex-hero {
+        min-height: 35vh;
+    }
+
+    .ex-hero-content {
+        padding: 32px 16px 24px;
+    }
+
+    .ex-back-link {
+        font-size: 12px;
+        margin-bottom: 14px;
+    }
+
+    .exhibits-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .exhibit-card-image {
+        height: 140px;
+    }
+
+    .exhibit-card-body {
+        padding: 14px;
+    }
+
+    .exhibit-card-title {
+        font-size: 14px;
+    }
+
+    .exhibit-card-desc {
+        font-size: 12px;
+    }
+
+    /* Loading/empty states */
+    .loading-state,
+    .empty-state {
+        padding: 40px 16px;
+    }
+}
+
+/* — Touch-friendly improvements — */
+@media (hover: none) and (pointer: coarse) {
+    .carousel-dot {
+        width: 14px;
+        height: 14px;
+    }
+
+    .nav-link {
+        padding: 12px 16px;
+    }
+
+    .hero-btn {
+        min-height: 48px;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .exhibition-card-link {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .contact-item a {
+        padding: 4px 0;
+    }
 }

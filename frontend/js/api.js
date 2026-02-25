@@ -70,30 +70,4 @@ function truncateText(text, maxLength) {
     return text.substring(0, maxLength) + '...';
 }
 
-// ═══════════════════════════════════════════════
-// Umami Analytics — клиентский трекинг
-// ═══════════════════════════════════════════════
 
-/**
- * Загружает конфигурацию аналитики с бэкенда и подключает Umami трекинг-скрипт.
- * Вызывается при загрузке каждой страницы.
- */
-async function initAnalytics() {
-    try {
-        const response = await fetch('/analytics');
-        if (!response.ok) return;
-        const config = await response.json();
-        if (!config.url || !config.website_id) return;
-
-        const script = document.createElement('script');
-        script.defer = true;
-        script.src = config.url + '/script.js';
-        script.setAttribute('data-website-id', config.website_id);
-        document.head.appendChild(script);
-    } catch (e) {
-        // Аналитика недоступна — игнорируем
-    }
-}
-
-// Запускаем подключение аналитики сразу при загрузке скрипта
-initAnalytics();

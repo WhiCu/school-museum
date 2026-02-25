@@ -7,11 +7,11 @@ services:
     environment:
       - LOG_LEVEL=debug
       - DB_HOST=db
+    env_file:
+      - .env
     depends_on:
       db:
         condition: service_healthy
-      # jaeger:
-      # umami:
     ports:
       - "8081:8080"
     volumes:
@@ -65,41 +65,9 @@ services:
     networks:
       - dbnet
 
-  jaeger:
-    image: jaegertracing/all-in-one:1.76.0
-    container_name: jaeger
-    ports:
-      - "16686:16686"
-      - "4317:4317"
-      - "4318:4318"
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-    networks:
-      - dbnet
-
-  umami:
-    image: ghcr.io/umami-software/umami:postgresql-v2.15.1
-    container_name: umami
-    environment:
-      DATABASE_URL: postgresql://user:password@db:5432/umami?sslmode=disable
-      HASH_SALT: some_random_salt
-    ports:
-      - "3000:3000"
-    depends_on:
-      db:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-    networks:
-      - dbnet
 
 volumes:
   pgdata:
-  ch_data:
   srvlogs:
 
 networks:

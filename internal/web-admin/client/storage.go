@@ -13,14 +13,16 @@ type Storage struct {
 	News        storage.Storage[model.News]
 	Exhibitions storage.Storage[model.Exhibition]
 	Exhibits    storage.Storage[model.Exhibit]
+	Visits      *storage.VisitStorage
 	log         *slog.Logger
 }
 
-func NewStorage(news storage.Storage[model.News], exhibitions storage.Storage[model.Exhibition], exhibits storage.Storage[model.Exhibit], log *slog.Logger) *Storage {
+func NewStorage(news storage.Storage[model.News], exhibitions storage.Storage[model.Exhibition], exhibits storage.Storage[model.Exhibit], visits *storage.VisitStorage, log *slog.Logger) *Storage {
 	return &Storage{
 		News:        news,
 		Exhibitions: exhibitions,
 		Exhibits:    exhibits,
+		Visits:      visits,
 		log:         log,
 	}
 }
@@ -115,4 +117,15 @@ func (s *Storage) DeleteExhibit(ctx context.Context, id uuid.UUID) error {
 		return err
 	}
 	return nil
+}
+
+// --- Stats ---
+
+func (s *Storage) GetStats(ctx context.Context) (model.VisitStats, error) {
+	stats, err := s.Visits.Stats(ctx)
+	if err != nil {
+		s.log.Error("failed to get stats", slog.String("error", err.Error()))
+		return model.VisitStats{}, err
+	}
+	return stats, nil
 }

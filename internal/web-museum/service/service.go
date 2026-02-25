@@ -13,6 +13,7 @@ type Storage interface {
 	GetNewsByID(ctx context.Context, id uuid.UUID) (model.News, error)
 	GetAllExhibitions(ctx context.Context) ([]model.Exhibition, error)
 	GetExhibitionByID(ctx context.Context, id uuid.UUID) (model.Exhibition, error)
+	RecordVisit(ctx context.Context, v model.Visitor) error
 }
 
 type Service struct {
@@ -41,4 +42,8 @@ func (s *Service) GetAllExhibitions(ctx context.Context) ([]model.Exhibition, er
 
 func (s *Service) GetExhibitionByID(ctx context.Context, id uuid.UUID) (model.Exhibition, error) {
 	return s.storage.GetExhibitionByID(ctx, id)
+}
+
+func (s *Service) RecordVisit(ctx context.Context, v model.Visitor) error {
+	return s.storage.RecordVisit(ctx, v)
 }

@@ -81,6 +81,8 @@ func Load[T any](ft filetype) (*T, error) {
 				newKey = strings.Replace(strings.ToLower(k), "db_", "storage.", 1)
 			case strings.HasPrefix(k, "LOG_"):
 				newKey = strings.Replace(strings.ToLower(k), "log_", "logger.", 1)
+			case strings.HasPrefix(k, "ADMIN_"):
+				newKey = strings.Replace(strings.ToLower(k), "admin_", "admin.", 1)
 			default:
 				return "", nil
 			}

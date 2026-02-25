@@ -9,19 +9,9 @@ import (
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"github.com/uptrace/bun/extra/bundebug"
-	"github.com/uptrace/bun/extra/bunotel"
 )
 
 type Option func(*bun.DB)
-
-// WithOtel добавляет OpenTelemetry хук для трейсинга SQL-запросов.
-func WithOtel() Option {
-	return func(db *bun.DB) {
-		db.AddQueryHook(bunotel.NewQueryHook(
-			bunotel.WithFormattedQueries(true),
-		))
-	}
-}
 
 // WithDebug добавляет debug-хук для логирования SQL-запросов в stdout.
 func WithDebug(verbose bool) Option {
@@ -91,6 +81,26 @@ func NewDB(ctx context.Context, dsn string, opts ...Option) (db *bun.DB, err err
 		Model((*model.Exhibit)(nil)).
 		Unique().
 		Column("id").
+		IfNotExists().
+		Exec(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = db.NewCreateTable().
+		Model((*model.Visitor)(nil)).
+		IfNotExists().
+		Exec(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Unique index on visitor IP for UPSERT
+	_, err = db.NewCreateIndex().
+		Index("visitors_ip_idx").
+		Model((*model.Visitor)(nil)).
+		Unique().
+		Column("ip").
 		IfNotExists().
 		Exec(ctx)
 	if err != nil {

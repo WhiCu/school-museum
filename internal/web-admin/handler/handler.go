@@ -20,6 +20,8 @@ type service interface {
 	CreateExhibit(ctx context.Context, e model.Exhibit) (model.Exhibit, error)
 	UpdateExhibit(ctx context.Context, e model.Exhibit) (model.Exhibit, error)
 	DeleteExhibit(ctx context.Context, id uuid.UUID) error
+
+	GetStats(ctx context.Context) (model.VisitStats, error)
 }
 
 type Handler struct {

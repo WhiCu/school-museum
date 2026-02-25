@@ -16,8 +16,9 @@ func RegisterHandlers(
 	news storage.Storage[model.News],
 	exhibitions storage.Storage[model.Exhibition],
 	exhibits storage.Storage[model.Exhibit],
+	visits *storage.VisitStorage,
 	log *slog.Logger) {
-	stg := client.NewStorage(news, exhibitions, exhibits, log.WithGroup("storage"))
+	stg := client.NewStorage(news, exhibitions, exhibits, visits, log.WithGroup("storage"))
 	srv := service.NewService(stg, log.WithGroup("service"))
 	h := handler.NewHandler(srv, log.WithGroup("handler"))
 
@@ -37,4 +38,7 @@ func RegisterHandlers(
 	h.CreateExhibit(api)
 	h.UpdateExhibit(api)
 	h.DeleteExhibit(api)
+
+	// Stats
+	h.GetStats(api)
 }

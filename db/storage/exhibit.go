@@ -43,7 +43,12 @@ func (s *ExhibitStorage) Delete(ctx context.Context, id uuid.UUID) error {
 }
 
 func (s *ExhibitStorage) Update(ctx context.Context, e model.Exhibit) (model.Exhibit, error) {
-	err := s.db.NewUpdate().Model(&e).Where("id = ?", e.ID).Scan(ctx, &e)
+	_, err := s.db.NewUpdate().
+		Model(&e).
+		WherePK().
+		OmitZero().
+		Returning("*").
+		Exec(ctx)
 	if err != nil {
 		return model.Exhibit{}, err
 	}

@@ -36,26 +36,15 @@ type LoggerConfig struct {
 }
 
 type Config struct {
-	Server    ServerConfig    `yaml:"server" env:"SERVER" koanf:"server"`
-	Storage   StorageConfig   `yaml:"storage" env:"STORAGE" koanf:"storage"`
-	Logger    LoggerConfig    `yaml:"logger" env:"LOGGER" koanf:"logger"`
-	Telemetry TelemetryConfig `yaml:"telemetry" env:"TELEMETRY" koanf:"telemetry"`
+	Server  ServerConfig  `yaml:"server" env:"SERVER" koanf:"server"`
+	Storage StorageConfig `yaml:"storage" env:"STORAGE" koanf:"storage"`
+	Logger  LoggerConfig  `yaml:"logger" env:"LOGGER" koanf:"logger"`
+	Admin   AdminConfig   `yaml:"admin" env:"ADMIN" koanf:"admin"`
 }
 
-type TelemetryConfig struct {
-	Enabled      bool        `yaml:"enabled" koanf:"enabled"`
-	OTLPEndpoint string      `yaml:"otlp_endpoint" koanf:"otlp_endpoint"`
-	ServiceName  string      `yaml:"service_name" koanf:"service_name"`
-	Umami        UmamiConfig `yaml:"umami" koanf:"umami"`
-}
-
-type UmamiConfig struct {
-	Enabled   bool   `yaml:"enabled" koanf:"enabled"`
-	URL       string `yaml:"url" koanf:"url"`
-	WebsiteID string `yaml:"website_id" koanf:"website_id"`
-	Username  string `yaml:"username" koanf:"username"`
-	Password  string `yaml:"password" koanf:"password"`
-	Domain    string `yaml:"domain" koanf:"domain"`
+type AdminConfig struct {
+	Login    string `yaml:"login" env:"ADMIN_LOGIN" env-default:"admin" koanf:"login"`
+	Password string `yaml:"password" env:"ADMIN_PASSWORD" env-default:"admin" koanf:"password"`
 }
 
 func (srv *ServerConfig) ServerAddr() string {
