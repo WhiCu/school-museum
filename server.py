@@ -1,7 +1,13 @@
 """
-Простой сервер для разработки.
+Простой прокси-сервер для ЛОКАЛЬНОЙ разработки (без Docker).
 Раздаёт фронтенд и проксирует API-запросы к бэкенду.
-Запуск: py server.py
+
+Использование:
+  1. Запустите Go-сервер: go run . -t kdl  (или task run:cli)
+  2. Запустите этот скрипт: py server.py  (или task dev)
+  3. Откройте http://localhost:5500
+
+Для запуска через Docker используйте: docker compose up
 """
 import http.server
 import urllib.request
@@ -9,7 +15,7 @@ import urllib.error
 import sys
 
 FRONTEND_DIR = 'frontend'
-BACKEND_URL = 'http://localhost:8081'
+BACKEND_URL = 'http://localhost:8080'
 PORT = 5500
 
 # Пути, которые проксируются на бэкенд

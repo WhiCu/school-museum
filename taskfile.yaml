@@ -39,7 +39,23 @@ tasks:
     cmds:
       - echo "Run air"
       - air -d 
-  
+
+  dev:
+    desc: Run frontend dev server (proxy + static files)
+    cmds:
+      - echo "Starting dev server on http://localhost:5500"
+      - python server.py
+
+  docker:up:
+    desc: Start all services in Docker
+    cmds:
+      - docker compose up -d --build
+
+  docker:down:
+    desc: Stop all Docker services
+    cmds:
+      - docker compose down
+
   release:
     desc: Build the application for release
     deps: [test]

@@ -43,7 +43,12 @@ func (s *NewsStorage) Delete(ctx context.Context, id uuid.UUID) error {
 }
 
 func (s *NewsStorage) Update(ctx context.Context, n model.News) (model.News, error) {
-	err := s.db.NewUpdate().Model(&n).Where("id = ?", n.ID).Scan(ctx, &n)
+	_, err := s.db.NewUpdate().
+		Model(&n).
+		WherePK().
+		OmitZero().
+		Returning("*").
+		Exec(ctx)
 	if err != nil {
 		return model.News{}, err
 	}

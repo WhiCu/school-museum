@@ -1,17 +1,7 @@
 #!/bin/bash
-# Остановка бэкенда и фронтенда
+# Остановка проекта школьного музея (Docker)
 
 echo "Остановка проекта..."
-
-# Остановка фронтенда
-if [ -f .frontend.pid ]; then
-    kill $(cat .frontend.pid) 2>/dev/null
-    rm .frontend.pid
-    echo "✓ Фронтенд остановлен"
-fi
-
-# Остановка бэкенда
-docker-compose down
-echo "✓ Бэкенд остановлен"
-
+docker compose down
+echo "✓ Все сервисы остановлены"
 echo "Готово!"
