@@ -8,48 +8,50 @@
 frontend/
 ├── index.html          # Главная страница
 ├── exhibition.html     # Страница экспозиции
+├── admin.html          # Админ-панель
+├── nginx.conf          # Конфигурация nginx для Docker
 ├── css/
-│   └── styles.css      # Стили
+│   ├── styles.css      # Стили сайта
+│   └── admin.css       # Стили админки
 └── js/
     ├── api.js          # API клиент
     ├── main.js         # Скрипт главной страницы
-    └── exhibition.js   # Скрипт страницы экспозиции
+    ├── exhibition.js   # Скрипт страницы экспозиции
+    └── admin.js        # Скрипт админ-панели
 ```
 
 ## Запуск
 
-### Вариант 1: Простой HTTP сервер (Python)
+### Вариант 1: Docker (рекомендуется)
+
+Фронтенд раздаётся через nginx-контейнер в `docker-compose.yml`.
 
 ```bash
-cd frontend
-python -m http.server 3000
+docker compose up -d
 ```
 
-Откройте http://localhost:3000
+Откройте http://localhost
 
-### Вариант 2: Live Server (VS Code)
+### Вариант 2: Локальная разработка (без Docker)
 
-1. Установите расширение "Live Server" в VS Code
-2. Откройте `frontend/index.html`
-3. Нажмите "Go Live" в правом нижнем углу
-
-### Вариант 3: Node.js (serve)
+Запустите Go-сервер и прокси-сервер `server.py`:
 
 ```bash
-npm install -g serve
-cd frontend
-serve -p 3000
+# Терминал 1: бэкенд
+go run . -t kdl
+
+# Терминал 2: фронтенд + прокси
+py server.py
 ```
+
+Откройте http://localhost:5500
 
 ## API
 
-Фронтенд ожидает бэкенд на `http://localhost:8080` со следующими эндпоинтами:
+Фронтенд обращается к бэкенду через следующие эндпоинты:
 
-- `GET /museum/exhibitions` - список всех экспозиций
-- `GET /museum/exhibitions/{id}` - экспозиция с экспонатами
-- `GET /museum/news` - список новостей
-- `GET /museum/news/{id}` - конкретная новость
-
-## CORS
-
-Для локальной разработки убедитесь, что бэкенд разрешает CORS запросы с `http://localhost:3000`.
+- `GET /museum/exhibitions` — список всех экспозиций
+- `GET /museum/exhibitions/{id}` — экспозиция с экспонатами
+- `GET /museum/news` — список новостей
+- `GET /museum/news/{id}` — конкретная новость
+- `POST /admin/...` — управление контентом (админка)

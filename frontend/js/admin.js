@@ -307,6 +307,7 @@ async function loadNews() {
                     </div>
                 </div>
                 <div class="item-actions">
+                    <button class="btn btn-small btn-edit" onclick="showNewsForm('${n.id}')">✏️</button>
                     <button class="btn btn-small btn-delete" onclick="deleteNewsItem('${n.id}')">🗑️</button>
                 </div>
             </div>
@@ -316,32 +317,35 @@ async function loadNews() {
     }
 }
 
-function showNewsForm() {
-    document.getElementById('modal-title').textContent = 'Новая новость';
+function showNewsForm(id) {
+    const n = id ? newsCache.find(x => x.id === id) : null;
+    const isEdit = !!n;
+
+    document.getElementById('modal-title').textContent = isEdit ? 'Редактировать новость' : 'Новая новость';
     document.getElementById('modal-body').innerHTML = `
-        <form id="news-form" onsubmit="saveNews(event)">
+        <form id="news-form" onsubmit="saveNews(event, '${id || ''}')">
             <div class="form-group">
                 <label>Заголовок *</label>
-                <input type="text" id="news-title" required>
+                <input type="text" id="news-title" value="${isEdit ? n.title : ''}" required>
             </div>
             <div class="form-group">
                 <label>Содержание</label>
-                <textarea id="news-content" rows="6"></textarea>
+                <textarea id="news-content" rows="6">${isEdit ? (n.content || '') : ''}</textarea>
             </div>
             <div class="form-group">
                 <label>URL изображения</label>
-                <input type="url" id="news-image" placeholder="https://...">
+                <input type="url" id="news-image" value="${isEdit ? (n.image_url || '') : ''}" placeholder="https://...">
             </div>
             <div class="form-actions">
                 <button type="button" class="btn btn-secondary" onclick="closeModal()">Отмена</button>
-                <button type="submit" class="btn btn-primary">Создать</button>
+                <button type="submit" class="btn btn-primary">${isEdit ? 'Сохранить' : 'Создать'}</button>
             </div>
         </form>
     `;
     openModal();
 }
 
-async function saveNews(event) {
+async function saveNews(event, id) {
     event.preventDefault();
     const body = {
         title: document.getElementById('news-title').value.trim(),
@@ -349,7 +353,11 @@ async function saveNews(event) {
         image_url: document.getElementById('news-image').value.trim()
     };
     try {
-        await apiRequest(`${ADMIN_API}/news`, 'POST', body);
+        if (id) {
+            await apiRequest(`${ADMIN_API}/news/${id}`, 'PUT', body);
+        } else {
+            await apiRequest(`${ADMIN_API}/news`, 'POST', body);
+        }
         closeModal();
         await loadNews();
     } catch (e) {
