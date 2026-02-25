@@ -69,25 +69,22 @@
             </div>
         </section>
 
-        <!-- ═══════════ СТАТИСТИКА ═══════════ -->
-        <section class="section stats">
+        <!-- ═══════════ ЛЕНТА НОВОСТЕЙ (тёмный блок) ═══════════ -->
+        <section class="section news-highlight" id="news-highlight">
             <div class="container">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-number" data-target="900">0</div>
-                        <div class="stat-label">учеников посетили</div>
-                        <p class="stat-desc">Приглашаем каждого лицеиста и не только!</p>
+                <div class="news-hl-header">
+                    <div class="section-label" style="color:#c9a96e;">Актуальное</div>
+                    <h2 class="section-title" style="color:#fff;">Последние новости</h2>
+                </div>
+                <div class="carousel carousel--dark" id="news-hl-carousel">
+                    <button class="carousel-arrow carousel-arrow--prev" data-dir="prev" aria-label="Назад">‹</button>
+                    <div class="carousel-viewport">
+                        <div class="carousel-track" id="news-hl-track">
+                            <div class="loading-state" style="color:rgba(255,255,255,.5);"><div class="spinner"></div><p>Загрузка новостей...</p></div>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="stat-exhibitions" data-target="5">0</div>
-                        <div class="stat-label">экспозиций</div>
-                        <p class="stat-desc">Коллекция экспонатов неустанно пополняется</p>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" data-target="10">0</div>
-                        <div class="stat-label">экскурсоводов</div>
-                        <p class="stat-desc">Профессиональные учителя истории и активисты музея</p>
-                    </div>
+                    <button class="carousel-arrow carousel-arrow--next" data-dir="next" aria-label="Вперёд">›</button>
+                    <div class="carousel-dots" id="news-hl-dots"></div>
                 </div>
             </div>
         </section>
@@ -97,11 +94,18 @@
             <div class="container">
                 <div class="section-label">Коллекция</div>
                 <h2 class="section-title">Наши экспозиции</h2>
-                <div id="exhibitions-grid" class="exhibitions-grid">
-                    <div class="loading-state">
-                        <div class="spinner"></div>
-                        <p>Загрузка экспозиций...</p>
+                <div class="carousel" id="exhibitions-carousel">
+                    <button class="carousel-arrow carousel-arrow--prev" data-dir="prev" aria-label="Назад">‹</button>
+                    <div class="carousel-viewport">
+                        <div class="carousel-track" id="exhibitions-grid">
+                            <div class="loading-state">
+                                <div class="spinner"></div>
+                                <p>Загрузка экспозиций...</p>
+                            </div>
+                        </div>
                     </div>
+                    <button class="carousel-arrow carousel-arrow--next" data-dir="next" aria-label="Вперёд">›</button>
+                    <div class="carousel-dots" id="exhibitions-dots"></div>
                 </div>
             </div>
         </section>
@@ -111,11 +115,18 @@
             <div class="container">
                 <div class="section-label">Актуальное</div>
                 <h2 class="section-title">Новости музея</h2>
-                <div id="news-container" class="news-grid">
-                    <div class="loading-state">
-                        <div class="spinner"></div>
-                        <p>Загрузка новостей...</p>
+                <div class="carousel" id="news-carousel">
+                    <button class="carousel-arrow carousel-arrow--prev" data-dir="prev" aria-label="Назад">‹</button>
+                    <div class="carousel-viewport">
+                        <div class="carousel-track" id="news-container">
+                            <div class="loading-state">
+                                <div class="spinner"></div>
+                                <p>Загрузка новостей...</p>
+                            </div>
+                        </div>
                     </div>
+                    <button class="carousel-arrow carousel-arrow--next" data-dir="next" aria-label="Вперёд">›</button>
+                    <div class="carousel-dots" id="news-dots"></div>
                 </div>
             </div>
         </section>

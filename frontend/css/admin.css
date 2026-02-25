@@ -500,6 +500,92 @@
     to { transform: rotate(360deg); }
 }
 
+/* ═══════════ STATS PANEL ═══════════ */
+
+.stats-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.admin-stat-card {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 14px;
+    padding: 24px 20px;
+    text-align: center;
+    transition: box-shadow 0.25s, transform 0.25s;
+}
+
+.admin-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.admin-stat-icon {
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+
+.admin-stat-value {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: #1a1a2e;
+    line-height: 1;
+    margin-bottom: 6px;
+}
+
+.admin-stat-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stats-iframe-wrap {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 14px;
+    overflow: hidden;
+    min-height: 500px;
+    position: relative;
+}
+
+.stats-iframe-wrap iframe {
+    width: 100%;
+    height: 600px;
+    border: none;
+    display: block;
+}
+
+.stats-hint {
+    text-align: center;
+    padding: 60px 24px;
+    color: #bbb;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+@media (max-width: 960px) {
+    .stats-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 520px) {
+    .stats-cards {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .admin-layout {

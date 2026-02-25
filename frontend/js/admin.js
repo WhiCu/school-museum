@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadExhibitions();
     loadAllExhibits();
     loadNews();
+    loadAdminStats();
 });
 
 // ==================== Общие утилиты ====================
@@ -374,6 +375,52 @@ async function deleteNewsItem(id) {
         await loadNews();
     } catch (e) {
         alert('Ошибка удаления: ' + e.message);
+    }
+}
+
+// ==================== СТАТИСТИКА ====================
+
+async function loadAdminStats() {
+    // Подсчёт экспозиций и новостей
+    try {
+        const exData = await apiRequest(`${MUSEUM_API}/exhibitions`);
+        const exhibitions = Array.isArray(exData) ? exData : (exData.exhibitions || []);
+        const el = document.getElementById('admin-stat-exhibitions');
+        if (el) el.textContent = exhibitions.length;
+    } catch (_) {}
+
+    try {
+        const nData = await apiRequest(`${MUSEUM_API}/news`);
+        const news = Array.isArray(nData) ? nData : (nData.news || []);
+        const el = document.getElementById('admin-stat-news');
+        if (el) el.textContent = news.length;
+    } catch (_) {}
+
+    // Umami аналитика — загрузка дашборда
+    try {
+        const resp = await fetch('/analytics');
+        if (!resp.ok) return;
+        const config = await resp.json();
+        if (!config.url || !config.website_id) return;
+
+        // Загрузка статистики через Umami share URL
+        const wrap = document.getElementById('stats-iframe-wrap');
+        if (wrap) {
+            wrap.innerHTML = `<iframe src="${config.url}/share/${config.website_id}" title="Статистика посещений"></iframe>`;
+        }
+
+        // Попытка загрузить сводные цифры через API
+        const today = new Date().toISOString().slice(0, 10);
+        const statsResp = await fetch(`${config.url}/api/websites/${config.website_id}/stats?startAt=${new Date(today).getTime()}&endAt=${Date.now()}`);
+        if (statsResp.ok) {
+            const stats = await statsResp.json();
+            const views = document.getElementById('admin-stat-views');
+            const visitors = document.getElementById('admin-stat-visitors');
+            if (views && stats.pageviews != null) views.textContent = stats.pageviews.value;
+            if (visitors && stats.visitors != null) visitors.textContent = stats.visitors.value;
+        }
+    } catch (_) {
+        // Umami не настроен — оставляем подсказку
     }
 }
 

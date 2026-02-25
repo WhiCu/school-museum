@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initHeader();
     initBurger();
     initScrollAnimations();
-    initStatCounters();
+    loadNewsHighlight();
     loadExhibitions();
     loadNews();
     initNewsModal();
@@ -55,18 +55,14 @@ function initScrollAnimations() {
         });
     }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 
-    // Add fade-in to key elements
     const selectors = [
         '.about-content',
-        '.stat-card',
-        '.exhibition-card',
-        '.news-card',
         '.team-card',
         '.visit-card',
-        '.contacts-inner'
+        '.contacts-inner',
+        '.carousel'
     ];
 
-    // Delay to let DOM render
     requestAnimationFrame(() => {
         selectors.forEach(sel => {
             document.querySelectorAll(sel).forEach(el => {
@@ -77,40 +73,185 @@ function initScrollAnimations() {
     });
 }
 
-// ── Stat counters animation ──
-function initStatCounters() {
-    const counters = document.querySelectorAll('.stat-number[data-target]');
-    if (!counters.length) return;
+// ── Load news highlight (dark strip) ──
+async function loadNewsHighlight() {
+    const track = document.getElementById('news-hl-track');
+    if (!track) return;
 
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                animateCounter(entry.target);
-                observer.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.5 });
-
-    counters.forEach(counter => observer.observe(counter));
-}
-
-function animateCounter(el) {
-    const target = parseInt(el.dataset.target, 10);
-    const duration = 1800;
-    const start = performance.now();
-
-    function update(now) {
-        const elapsed = now - start;
-        const progress = Math.min(elapsed / duration, 1);
-        // easeOutCubic
-        const eased = 1 - Math.pow(1 - progress, 3);
-        el.textContent = Math.round(target * eased);
-        if (progress < 1) {
-            requestAnimationFrame(update);
-        }
+    const newsData = await api.getAllNews();
+    if (!newsData || newsData.length === 0) {
+        track.innerHTML = '<div class="empty-state" style="color:rgba(255,255,255,.5)">Новости пока отсутствуют</div>';
+        return;
     }
 
-    requestAnimationFrame(update);
+    track.innerHTML = newsData.map(n => `
+        <div class="news-hl-card" onclick="openNewsModal('${n.id}')">
+            <div class="news-card-date">${formatDate(n.created_at)}</div>
+            <h3 class="news-hl-title">${n.title}</h3>
+            <p class="news-hl-text">${truncateText(n.content, 150)}</p>
+        </div>
+    `).join('');
+
+    const ctrl = initCarousel('news-hl-carousel', 'news-hl-dots');
+    if (ctrl) ctrl.refresh();
+}
+
+// ═══════════════════════════════════════════════
+// Carousel controller (generic)
+// ═══════════════════════════════════════════════
+
+function initCarousel(carouselId, dotsId, options = {}) {
+    const carousel = document.getElementById(carouselId);
+    if (!carousel) return null;
+
+    const track = carousel.querySelector('.carousel-track');
+    const dotsContainer = document.getElementById(dotsId);
+    const prevBtn = carousel.querySelector('.carousel-arrow--prev');
+    const nextBtn = carousel.querySelector('.carousel-arrow--next');
+
+    const fixedPerView = options.perView || null; // null = responsive
+
+    let currentIndex = 0;
+    let perView = fixedPerView || getPerView();
+    let totalSlides = 0;
+    let maxIndex = 0;
+    let autoTimer = null;
+
+    function getPerView() {
+        if (fixedPerView) return fixedPerView;
+        const w = window.innerWidth;
+        if (w <= 600) return 1;
+        if (w <= 960) return 2;
+        return 3;
+    }
+
+    function recalc() {
+        const cards = track.children;
+        totalSlides = cards.length;
+        perView = getPerView();
+        maxIndex = Math.max(0, totalSlides - perView);
+        if (currentIndex > maxIndex) currentIndex = maxIndex;
+    }
+
+    function slide(animate = true) {
+        if (!track.children.length) return;
+        const card = track.children[0];
+        const gap = 28;
+        const cardWidth = card.offsetWidth + gap;
+        const offset = currentIndex * cardWidth;
+        track.style.transition = animate ? 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)' : 'none';
+        track.style.transform = `translateX(-${offset}px)`;
+        updateArrows();
+        updateDots();
+    }
+
+    function updateArrows() {
+        if (prevBtn) prevBtn.disabled = currentIndex <= 0;
+        if (nextBtn) nextBtn.disabled = currentIndex >= maxIndex;
+    }
+
+    function updateDots() {
+        if (!dotsContainer) return;
+        const pages = maxIndex + 1;
+        // Rebuild dots if count changed
+        if (dotsContainer.children.length !== pages) {
+            dotsContainer.innerHTML = '';
+            for (let i = 0; i < pages; i++) {
+                const dot = document.createElement('button');
+                dot.className = 'carousel-dot';
+                dot.setAttribute('aria-label', `Страница ${i + 1}`);
+                dot.addEventListener('click', () => goTo(i));
+                dotsContainer.appendChild(dot);
+            }
+        }
+        Array.from(dotsContainer.children).forEach((d, i) => {
+            d.classList.toggle('active', i === currentIndex);
+        });
+    }
+
+    function goTo(index) {
+        currentIndex = Math.max(0, Math.min(index, maxIndex));
+        slide();
+        resetAuto();
+    }
+
+    function next() { goTo(currentIndex + 1); }
+    function prev() { goTo(currentIndex - 1); }
+
+    // Arrows
+    if (prevBtn) prevBtn.addEventListener('click', prev);
+    if (nextBtn) nextBtn.addEventListener('click', next);
+
+    // Touch / swipe
+    let startX = 0, startY = 0, dx = 0, swiping = false;
+
+    track.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        dx = 0;
+        swiping = true;
+        track.style.transition = 'none';
+    }, { passive: true });
+
+    track.addEventListener('touchmove', (e) => {
+        if (!swiping) return;
+        dx = e.touches[0].clientX - startX;
+        const dy = Math.abs(e.touches[0].clientY - startY);
+        if (dy > Math.abs(dx)) { swiping = false; return; }
+        const card = track.children[0];
+        const gap = 28;
+        const cardWidth = card.offsetWidth + gap;
+        const base = currentIndex * cardWidth;
+        track.style.transform = `translateX(-${base - dx}px)`;
+    }, { passive: true });
+
+    track.addEventListener('touchend', () => {
+        if (!swiping) { slide(); return; }
+        swiping = false;
+        const threshold = 50;
+        if (dx < -threshold) next();
+        else if (dx > threshold) prev();
+        else slide();
+    });
+
+    // Auto-play
+    function startAuto() {
+        stopAuto();
+        autoTimer = setInterval(() => {
+            if (currentIndex >= maxIndex) goTo(0);
+            else next();
+        }, 5000);
+    }
+
+    function stopAuto() {
+        if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+    }
+
+    function resetAuto() {
+        stopAuto();
+        startAuto();
+    }
+
+    carousel.addEventListener('mouseenter', stopAuto);
+    carousel.addEventListener('mouseleave', startAuto);
+
+    // Window resize
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            recalc();
+            slide(false);
+        }, 150);
+    });
+
+    return {
+        refresh() {
+            recalc();
+            slide(false);
+            startAuto();
+        }
+    };
 }
 
 // ── Load Exhibitions ──
@@ -119,12 +260,6 @@ async function loadExhibitions() {
     if (!grid) return;
 
     const exhibitions = await api.getAllExhibitions();
-
-    // Update stat counter
-    const statEl = document.getElementById('stat-exhibitions');
-    if (statEl && exhibitions.length > 0) {
-        statEl.dataset.target = exhibitions.length;
-    }
 
     if (!exhibitions || exhibitions.length === 0) {
         grid.innerHTML = '<div class="empty-state">Экспозиции пока не добавлены</div>';
@@ -151,8 +286,8 @@ async function loadExhibitions() {
         `;
     }).join('');
 
-    // Re-run scroll animations for new elements
-    requestAnimationFrame(() => initScrollAnimations());
+    const ctrl = initCarousel('exhibitions-carousel', 'exhibitions-dots', { perView: 1 });
+    if (ctrl) ctrl.refresh();
 }
 
 function openExhibition(id) {
@@ -185,8 +320,8 @@ async function loadNews() {
         </div>
     `).join('');
 
-    // Re-run scroll animations for new elements
-    requestAnimationFrame(() => initScrollAnimations());
+    const ctrl = initCarousel('news-carousel', 'news-dots');
+    if (ctrl) ctrl.refresh();
 }
 
 // ── News Modal ──

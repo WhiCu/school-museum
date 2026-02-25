@@ -29,7 +29,11 @@
         <!-- Sidebar -->
         <aside class="admin-sidebar" id="admin-sidebar">
             <ul class="sidebar-menu">
-                <li class="sidebar-item active" data-section="exhibitions">
+                <li class="sidebar-item active" data-section="stats">
+                    <span class="sidebar-icon">📊</span>
+                    <span class="sidebar-label">Статистика</span>
+                </li>
+                <li class="sidebar-item" data-section="exhibitions">
                     <span class="sidebar-icon">🏛️</span>
                     <span class="sidebar-label">Экспозиции</span>
                 </li>
@@ -47,8 +51,42 @@
         <!-- Content -->
         <section class="admin-content">
 
+            <!-- Статистика -->
+            <div id="section-stats" class="admin-section active">
+                <div class="section-header">
+                    <h2>Статистика посещений</h2>
+                </div>
+                <div id="stats-panel" class="stats-panel">
+                    <div class="stats-cards" id="stats-cards">
+                        <div class="admin-stat-card">
+                            <div class="admin-stat-icon">👁️</div>
+                            <div class="admin-stat-value" id="admin-stat-views">—</div>
+                            <div class="admin-stat-label">Просмотров сегодня</div>
+                        </div>
+                        <div class="admin-stat-card">
+                            <div class="admin-stat-icon">👥</div>
+                            <div class="admin-stat-value" id="admin-stat-visitors">—</div>
+                            <div class="admin-stat-label">Посетителей сегодня</div>
+                        </div>
+                        <div class="admin-stat-card">
+                            <div class="admin-stat-icon">🗂️</div>
+                            <div class="admin-stat-value" id="admin-stat-exhibitions">—</div>
+                            <div class="admin-stat-label">Экспозиций</div>
+                        </div>
+                        <div class="admin-stat-card">
+                            <div class="admin-stat-icon">📰</div>
+                            <div class="admin-stat-value" id="admin-stat-news">—</div>
+                            <div class="admin-stat-label">Новостей</div>
+                        </div>
+                    </div>
+                    <div class="stats-iframe-wrap" id="stats-iframe-wrap">
+                        <p class="stats-hint">Для подробной статистики посещений подключите Umami аналитику в настройках сервера (telemetry.umami).</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Экспозиции -->
-            <div id="section-exhibitions" class="admin-section active">
+            <div id="section-exhibitions" class="admin-section">
                 <div class="section-header">
                     <h2>Экспозиции</h2>
                     <button class="btn btn-primary" onclick="showExhibitionForm()">
