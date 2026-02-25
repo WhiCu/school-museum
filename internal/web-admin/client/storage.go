@@ -37,6 +37,15 @@ func (s *Storage) CreateNews(ctx context.Context, n model.News) (model.News, err
 	return n, nil
 }
 
+func (s *Storage) UpdateNews(ctx context.Context, n model.News) (model.News, error) {
+	updated, err := s.News.Update(ctx, n)
+	if err != nil {
+		s.log.Error("failed to update news", slog.String("id", n.ID.String()), slog.String("error", err.Error()))
+		return model.News{}, err
+	}
+	return updated, nil
+}
+
 func (s *Storage) DeleteNews(ctx context.Context, id uuid.UUID) error {
 	if err := s.News.Delete(ctx, id); err != nil {
 		s.log.Error("failed to delete news", slog.String("id", id.String()), slog.String("error", err.Error()))

@@ -14,6 +14,8 @@ services:
       # umami:
     ports:
       - "8081:8080"
+    volumes:
+      - srvlogs:/src/logs
     deploy:
       resources:
         limits:
@@ -81,6 +83,7 @@ services:
 volumes:
   pgdata:
   ch_data:
+  srvlogs:
 
 networks:
   dbnet:

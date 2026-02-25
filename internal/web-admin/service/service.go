@@ -14,6 +14,7 @@ var ErrExhibitionNotFound = errors.New("exhibition not found")
 
 type Storage interface {
 	CreateNews(ctx context.Context, n model.News) (model.News, error)
+	UpdateNews(ctx context.Context, n model.News) (model.News, error)
 	DeleteNews(ctx context.Context, id uuid.UUID) error
 
 	CreateExhibition(ctx context.Context, ex model.Exhibition) (model.Exhibition, error)
@@ -42,6 +43,10 @@ func NewService(storage Storage, log *slog.Logger) *Service {
 
 func (s *Service) CreateNews(ctx context.Context, n model.News) (model.News, error) {
 	return s.storage.CreateNews(ctx, n)
+}
+
+func (s *Service) UpdateNews(ctx context.Context, n model.News) (model.News, error) {
+	return s.storage.UpdateNews(ctx, n)
 }
 
 func (s *Service) DeleteNews(ctx context.Context, id uuid.UUID) error {

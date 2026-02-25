@@ -47,6 +47,46 @@ func (h *Handler) CreateNews(api huma.API) {
 	)
 }
 
+// UpdateNews - обновление новости.
+type updateNewsInput struct {
+	ID   uuid.UUID `path:"id" format:"uuid" doc:"ID новости"`
+	Body struct {
+		Title    string `json:"title" doc:"Заголовок новости"`
+		Content  string `json:"content" doc:"Содержание новости"`
+		ImageURL string `json:"image_url" doc:"URL изображения новости"`
+	}
+}
+
+type updateNewsOutput struct {
+	Body model.News
+}
+
+func (h *Handler) UpdateNews(api huma.API) {
+	huma.Register(
+		api,
+		huma.Operation{
+			OperationID: "update-news",
+			Method:      http.MethodPut,
+			Path:        "/news/{id}",
+			Summary:     "Обновить новость",
+			Description: "Обновляет данные существующей новости.",
+			Tags:        []string{"Admin", "News"},
+		},
+		func(ctx context.Context, req *updateNewsInput) (*updateNewsOutput, error) {
+			n, err := h.service.UpdateNews(ctx, model.News{
+				ID:       req.ID,
+				Title:    req.Body.Title,
+				Content:  req.Body.Content,
+				ImageURL: req.Body.ImageURL,
+			})
+			if err != nil {
+				return nil, huma.Error500InternalServerError("не удалось обновить новость")
+			}
+			return &updateNewsOutput{Body: n}, nil
+		},
+	)
+}
+
 // DeleteNews - удаление новости по ID.
 type deleteNewsInput struct {
 	ID uuid.UUID `path:"id" format:"uuid" doc:"ID новости"`

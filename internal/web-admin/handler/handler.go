@@ -10,6 +10,7 @@ import (
 
 type service interface {
 	CreateNews(ctx context.Context, n model.News) (model.News, error)
+	UpdateNews(ctx context.Context, n model.News) (model.News, error)
 	DeleteNews(ctx context.Context, id uuid.UUID) error
 
 	CreateExhibition(ctx context.Context, ex model.Exhibition) (model.Exhibition, error)

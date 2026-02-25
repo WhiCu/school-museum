@@ -25,6 +25,7 @@ func RegisterHandlers(
 
 	// News
 	h.CreateNews(api)
+	h.UpdateNews(api)
 	h.DeleteNews(api)
 
 	// Exhibitions
