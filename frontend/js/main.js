@@ -114,7 +114,6 @@ async function loadNewsHighlight() {
             <div class="news-hl-body">
                 <div class="news-card-date">${formatDate(n.created_at)}</div>
                 <h3 class="news-hl-title">${n.title}</h3>
-                <p class="news-hl-text">${truncateText(n.content, 150)}</p>
             </div>
         </div>
     `}).join('');
