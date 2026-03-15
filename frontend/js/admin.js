@@ -292,13 +292,16 @@ async function deleteExhibition(id) {
 // ==================== ЭКСПОНАТЫ ====================
 
 let allExhibits = [];
+let previewUpdateInFlight = false;
 
 async function loadAllExhibits() {
     const container = document.getElementById('exhibits-list');
     try {
         // Загружаем все экспозиции с экспонатами
         const data = await apiRequest(`${MUSEUM_API}/exhibitions`);
-        const exhibitions = Array.isArray(data) ? data : (data && data.exhibitions ? data.exhibitions : []);
+        const exhibitions = (Array.isArray(data) ? data : (data && data.exhibitions ? data.exhibitions : []))
+            .slice()
+            .sort((a, b) => String(a.title || '').localeCompare(String(b.title || ''), 'ru'));
 
         allExhibits = [];
         exhibitions.forEach(ex => {
@@ -313,7 +316,9 @@ async function loadAllExhibits() {
         }
 
         container.innerHTML = exhibitions.map(ex => {
-            const exhibits = allExhibits.filter(e => e.exhibition_id === ex.id);
+            const exhibits = allExhibits
+                .filter(e => e.exhibition_id === ex.id)
+                .sort((a, b) => String(a.title || '').localeCompare(String(b.title || ''), 'ru'));
             const previewId = ex.preview_exhibit_id || '';
             return `
                 <div class="exhibit-group">
@@ -333,8 +338,8 @@ async function loadAllExhibits() {
                                 <div class="item-card ${isPreview ? 'item-card--preview' : ''}">
                                     <div class="item-info">
                                         <label class="preview-radio" title="Превью экспозиции">
-                                            <input type="radio" name="preview-${ex.id}" value="${item.id}" ${isPreview ? 'checked' : ''}
-                                                onchange="setPreviewExhibit('${ex.id}', '${item.id}')">
+                                            <input type="radio" name="preview-${ex.id}" value="${item.id}" ${isPreview ? 'checked' : ''} data-was-preview="${isPreview ? '1' : '0'}"
+                                                onchange="setPreviewExhibit('${ex.id}', '${item.id}', this)">
                                             <span class="preview-radio-mark"></span>
                                         </label>
                                         ${firstImg ? `<img src="${firstImg}" class="item-thumb" alt="">` : ''}
@@ -625,13 +630,27 @@ function renderDailyChart(dailyVisits) {
 
 // ==================== ГРУППИРОВКА ====================
 
-async function setPreviewExhibit(exhibitionId, exhibitId) {
+async function setPreviewExhibit(exhibitionId, exhibitId, inputEl = null) {
+    if (previewUpdateInFlight) return;
+    if (inputEl && inputEl.dataset.wasPreview === '1') return;
+
+    previewUpdateInFlight = true;
+    const radios = document.querySelectorAll('.preview-radio input[type="radio"]');
+    radios.forEach(r => {
+        r.disabled = true;
+    });
+
     try {
         await apiRequest(`${ADMIN_API}/exhibitions/${exhibitionId}/preview`, 'PUT', { exhibit_id: exhibitId });
         await loadAllExhibits();
-        await loadExhibitions();
     } catch (e) {
         alert('Ошибка установки превью: ' + e.message);
+    } finally {
+        previewUpdateInFlight = false;
+        const refreshedRadios = document.querySelectorAll('.preview-radio input[type="radio"]');
+        refreshedRadios.forEach(r => {
+            r.disabled = false;
+        });
     }
 }
 

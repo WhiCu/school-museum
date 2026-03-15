@@ -21,6 +21,16 @@ html {
     scroll-snap-stop: normal;
 }
 
+.snap-group--peek-prev {
+    scroll-margin-top: 200px;
+}
+
+@media (max-width: 768px) {
+    .snap-group--peek-prev {
+        scroll-margin-top: 122px;
+    }
+}
+
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background-color: #faf9f6;
