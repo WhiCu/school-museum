@@ -42,7 +42,15 @@ func (s *ExhibitionStorage) Create(ctx context.Context, ex model.Exhibition) (uu
 }
 
 func (s *ExhibitionStorage) Delete(ctx context.Context, id uuid.UUID) error {
-	_, err := s.db.NewDelete().Model((*model.Exhibition)(nil)).Where("id = ?", id).Exec(ctx)
+	_, err := s.db.NewDelete().
+		Model((*model.Exhibit)(nil)).
+		Where("exhibition_id = ?", id).
+		Exec(ctx)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.db.NewDelete().Model((*model.Exhibition)(nil)).Where("id = ?", id).Exec(ctx)
 	return err
 }
 

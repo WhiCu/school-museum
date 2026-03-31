@@ -141,16 +141,38 @@ function truncate(text, len = 100) {
     return text.substring(0, len) + '...';
 }
 
+function buildAdminThumbMedia(url, altText) {
+    const safe = sanitizeUrl(url);
+    if (!safe) return '';
+
+    if (isVideoUrl(safe)) {
+        return `<video src="${safe}" class="item-thumb" muted playsinline preload="metadata"></video>`;
+    }
+
+    const external = parseExternalEmbed(safe);
+    if (external) {
+        if (external.provider === 'imgur') {
+            return `<div class="item-thumb item-thumb-link">Imgur</div>`;
+        }
+
+        const src = buildExternalEmbedSrc(external.base, external.provider, false);
+        return `<iframe src="${escapeHtml(src)}" class="item-thumb" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen title="${escapeHtml(altText || 'Медиа')}"></iframe>`;
+    }
+
+    return `<img src="${safe}" class="item-thumb" alt="${escapeHtml(altText)}">`;
+}
+
 // ==================== MULTI-IMAGE HELPERS ====================
 
 function addImageInput(containerId, value = '') {
     const container = document.getElementById(containerId);
     if (!container) return;
+    const safeValue = escapeHtml(value || '');
     const row = document.createElement('div');
     row.className = 'multi-image-row';
     row.innerHTML = `
         <img class="image-preview-thumb" src="" alt="">
-        <input type="url" class="image-url-input" value="${value}" placeholder="https://...">
+        <input type="url" class="image-url-input" value="${safeValue}" placeholder="https://...">
         <button type="button" class="btn btn-small btn-delete" onclick="removeImageRow(this)" title="Удалить">✕</button>
     `;
     const input = row.querySelector('.image-url-input');
@@ -196,7 +218,8 @@ function collectImageUrls(containerId) {
     const urls = [];
     inputs.forEach(input => {
         const val = input.value.trim();
-        if (val) urls.push(val);
+        const safe = sanitizeUrl(val);
+        if (safe) urls.push(safe);
     });
     return urls;
 }
@@ -219,18 +242,18 @@ async function loadExhibitions() {
         container.innerHTML = exhibitionsCache.map(ex => `
             <div class="item-card">
                 <div class="item-info">
-                    <h3 class="item-title">${ex.title}</h3>
-                    <p class="item-desc">${truncate(ex.description, 120)}</p>
+                    <h3 class="item-title">${escapeHtml(ex.title || '')}</h3>
+                    <p class="item-desc">${escapeHtml(truncate(ex.description, 120))}</p>
                     <span class="item-meta">${(ex.exhibits || []).length} экспонатов</span>
                 </div>
                 <div class="item-actions">
-                    <button class="btn btn-small btn-edit" onclick="showExhibitionForm('${ex.id}')">✏️</button>
-                    <button class="btn btn-small btn-delete" onclick="deleteExhibition('${ex.id}')">🗑️</button>
+                    <button class="btn btn-small btn-edit" onclick="showExhibitionForm('${ex.id}')">Ред.</button>
+                    <button class="btn btn-small btn-delete" onclick="deleteExhibition('${ex.id}')">Удал.</button>
                 </div>
             </div>
         `).join('');
     } catch (e) {
-        container.innerHTML = '<div class="error-state">Ошибка загрузки: ' + e.message + '</div>';
+        container.innerHTML = '<div class="error-state">Ошибка загрузки: ' + escapeHtml(e.message) + '</div>';
     }
 }
 
@@ -243,11 +266,11 @@ function showExhibitionForm(id = null) {
         <form id="exhibition-form" onsubmit="saveExhibition(event, '${id || ''}')">
             <div class="form-group">
                 <label>Название *</label>
-                <input type="text" id="ex-title" value="${isEdit ? ex.title : ''}" required>
+                <input type="text" id="ex-title" value="${isEdit ? escapeHtml(ex.title) : ''}" required>
             </div>
             <div class="form-group">
                 <label>Описание</label>
-                <textarea id="ex-description" rows="4">${isEdit ? (ex.description || '') : ''}</textarea>
+                <textarea id="ex-description" rows="4">${isEdit ? escapeHtml(ex.description || '') : ''}</textarea>
             </div>
             <div class="form-actions">
                 <button type="button" class="btn btn-secondary" onclick="closeModal()">Отмена</button>
@@ -324,7 +347,7 @@ async function loadAllExhibits() {
                 <div class="exhibit-group">
                     <div class="exhibit-group-header" onclick="toggleGroup(this)">
                         <span class="group-toggle">▾</span>
-                        <h3 class="group-title">🏛️ ${ex.title}</h3>
+                        <h3 class="group-title">${escapeHtml(ex.title || '')}</h3>
                         <span class="group-count">${exhibits.length} экспонатов</span>
                     </div>
                     <div class="exhibit-group-items">
@@ -332,7 +355,8 @@ async function loadAllExhibits() {
                             ? '<div class="empty-state" style="padding:16px;font-size:14px;">Нет экспонатов</div>'
                             : exhibits.map(item => {
                                 const imgs = item.image_urls || [];
-                                const firstImg = imgs.length > 0 ? imgs[0] : '';
+                                const media = normalizeMediaUrls(imgs);
+                                const firstMedia = media.length > 0 ? media[0] : '';
                                 const isPreview = item.id === previewId;
                                 return `
                                 <div class="item-card ${isPreview ? 'item-card--preview' : ''}">
@@ -342,15 +366,15 @@ async function loadAllExhibits() {
                                                 onchange="setPreviewExhibit('${ex.id}', '${item.id}', this)">
                                             <span class="preview-radio-mark"></span>
                                         </label>
-                                        ${firstImg ? `<img src="${firstImg}" class="item-thumb" alt="">` : ''}
+                                        ${firstMedia ? buildAdminThumbMedia(firstMedia, item.title || '') : ''}
                                         <div>
-                                            <h3 class="item-title">${item.title}${isPreview ? ' <span class="preview-badge">превью</span>' : ''}</h3>
-                                            <p class="item-desc">${truncate(item.description, 100)}${imgs.length > 1 ? ` · ${imgs.length} фото` : ''}</p>
+                                            <h3 class="item-title">${escapeHtml(item.title || '')}${isPreview ? ' <span class="preview-badge">превью</span>' : ''}</h3>
+                                            <p class="item-desc">${escapeHtml(truncate(item.description, 100))}${media.length > 1 ? ` · ${media.length} медиа` : ''}</p>
                                         </div>
                                     </div>
                                     <div class="item-actions">
-                                        <button class="btn btn-small btn-edit" onclick="showExhibitForm('${item.id}')">✏️</button>
-                                        <button class="btn btn-small btn-delete" onclick="deleteExhibit('${item.id}')">🗑️</button>
+                                        <button class="btn btn-small btn-edit" onclick="showExhibitForm('${item.id}')">Ред.</button>
+                                        <button class="btn btn-small btn-delete" onclick="deleteExhibit('${item.id}')">Удал.</button>
                                     </div>
                                 </div>
                             `}).join('')
@@ -360,7 +384,7 @@ async function loadAllExhibits() {
             `;
         }).join('');
     } catch (e) {
-        container.innerHTML = '<div class="error-state">Ошибка загрузки: ' + e.message + '</div>';
+        container.innerHTML = '<div class="error-state">Ошибка загрузки: ' + escapeHtml(e.message) + '</div>';
     }
 }
 
@@ -370,7 +394,7 @@ function showExhibitForm(id = null) {
     const existingUrls = isEdit ? (item.image_urls || []) : [];
 
     const exhibitionOptions = exhibitionsCache.map(ex =>
-        `<option value="${ex.id}" ${item && item.exhibition_id === ex.id ? 'selected' : ''}>${ex.title}</option>`
+        `<option value="${ex.id}" ${item && item.exhibition_id === ex.id ? 'selected' : ''}>${escapeHtml(ex.title || '')}</option>`
     ).join('');
 
     document.getElementById('modal-title').textContent = isEdit ? 'Редактировать экспонат' : 'Новый экспонат';
@@ -387,16 +411,16 @@ function showExhibitForm(id = null) {
             ` : ''}
             <div class="form-group">
                 <label>Название *</label>
-                <input type="text" id="exhibit-title" value="${isEdit ? item.title : ''}" required>
+                <input type="text" id="exhibit-title" value="${isEdit ? escapeHtml(item.title) : ''}" required>
             </div>
             <div class="form-group">
                 <label>Описание</label>
-                <textarea id="exhibit-description" rows="4">${isEdit ? (item.description || '') : ''}</textarea>
+                <textarea id="exhibit-description" rows="4">${isEdit ? escapeHtml(item.description || '') : ''}</textarea>
             </div>
             <div class="form-group">
-                <label>Изображения</label>
+                <label>Медиа (изображения или видео)</label>
                 <div id="exhibit-images-list" class="multi-image-list"></div>
-                <button type="button" class="btn btn-small btn-secondary" onclick="addImageInput('exhibit-images-list')">+ Добавить фото</button>
+                <button type="button" class="btn btn-small btn-secondary" onclick="addImageInput('exhibit-images-list')">+ Добавить медиа</button>
             </div>
             <div class="form-actions">
                 <button type="button" class="btn btn-secondary" onclick="closeModal()">Отмена</button>
@@ -466,26 +490,26 @@ async function loadNews() {
         }
 
         container.innerHTML = newsCache.map(n => {
-            const imgs = n.image_urls || [];
-            const firstImg = imgs.length > 0 ? imgs[0] : '';
+            const media = normalizeMediaUrls(n.image_urls || []);
+            const firstMedia = media.length > 0 ? media[0] : '';
             return `
             <div class="item-card">
                 <div class="item-info">
-                    ${firstImg ? `<img src="${firstImg}" class="item-thumb" alt="">` : ''}
+                    ${firstMedia ? buildAdminThumbMedia(firstMedia, n.title || '') : ''}
                     <div>
-                        <h3 class="item-title">${n.title}</h3>
-                        <p class="item-desc">${truncate(n.content, 120)}</p>
-                        <span class="item-meta">${formatDate(n.created_at)}${imgs.length > 1 ? ` · ${imgs.length} фото` : ''}</span>
+                        <h3 class="item-title">${escapeHtml(n.title || '')}</h3>
+                        <p class="item-desc">${escapeHtml(truncate(n.content, 120))}</p>
+                        <span class="item-meta">${formatDate(n.created_at)}${media.length > 1 ? ` · ${media.length} медиа` : ''}</span>
                     </div>
                 </div>
                 <div class="item-actions">
-                    <button class="btn btn-small btn-edit" onclick="showNewsForm('${n.id}')">✏️</button>
-                    <button class="btn btn-small btn-delete" onclick="deleteNewsItem('${n.id}')">🗑️</button>
+                    <button class="btn btn-small btn-edit" onclick="showNewsForm('${n.id}')">Ред.</button>
+                    <button class="btn btn-small btn-delete" onclick="deleteNewsItem('${n.id}')">Удал.</button>
                 </div>
             </div>
         `}).join('');
     } catch (e) {
-        container.innerHTML = '<div class="error-state">Ошибка загрузки: ' + e.message + '</div>';
+        container.innerHTML = '<div class="error-state">Ошибка загрузки: ' + escapeHtml(e.message) + '</div>';
     }
 }
 
@@ -499,16 +523,16 @@ function showNewsForm(id) {
         <form id="news-form" onsubmit="saveNews(event, '${id || ''}')">
             <div class="form-group">
                 <label>Заголовок *</label>
-                <input type="text" id="news-title" value="${isEdit ? n.title : ''}" required>
+                <input type="text" id="news-title" value="${isEdit ? escapeHtml(n.title) : ''}" required>
             </div>
             <div class="form-group">
                 <label>Содержание</label>
-                <textarea id="news-content" rows="6">${isEdit ? (n.content || '') : ''}</textarea>
+                <textarea id="news-content" rows="6">${isEdit ? escapeHtml(n.content || '') : ''}</textarea>
             </div>
             <div class="form-group">
-                <label>Изображения</label>
+                <label>Медиа (изображения или видео)</label>
                 <div id="news-images-list" class="multi-image-list"></div>
-                <button type="button" class="btn btn-small btn-secondary" onclick="addImageInput('news-images-list')">+ Добавить фото</button>
+                <button type="button" class="btn btn-small btn-secondary" onclick="addImageInput('news-images-list')">+ Добавить медиа</button>
             </div>
             <div class="form-actions">
                 <button type="button" class="btn btn-secondary" onclick="closeModal()">Отмена</button>

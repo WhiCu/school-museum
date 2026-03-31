@@ -47,6 +47,69 @@ function initBurger() {
     });
 }
 
+function initHoverMediaPlayback(scope = document) {
+    scope.querySelectorAll('[data-hover-play-video]').forEach((card) => {
+        if (card.dataset.hoverBound === '1') return;
+        card.dataset.hoverBound = '1';
+
+        const video = card.querySelector('video');
+        const embed = card.querySelector('iframe[data-embed-base][data-embed-provider]');
+
+        if (!video && !embed) return;
+
+        if (video) {
+            video.muted = true;
+            video.playsInline = true;
+        }
+
+        card.addEventListener('mouseenter', () => {
+            if (video) {
+                video.currentTime = 0;
+                video.play().catch(() => {});
+            }
+
+            if (embed) {
+                const provider = embed.dataset.embedProvider;
+                const base = embed.dataset.embedBase;
+                const nextSrc = buildExternalEmbedSrc(base, provider, true);
+                if (nextSrc) {
+                    embed.src = nextSrc;
+                }
+            }
+        });
+
+        card.addEventListener('mouseleave', () => {
+            if (video) {
+                video.pause();
+                video.currentTime = 0;
+            }
+
+            if (embed) {
+                const provider = embed.dataset.embedProvider;
+                const base = embed.dataset.embedBase;
+                const nextSrc = buildExternalEmbedSrc(base, provider, false);
+                if (nextSrc) {
+                    embed.src = nextSrc;
+                }
+            }
+        });
+    });
+}
+
+function initInlineCardVideoPlayback(scope = document) {
+    scope.querySelectorAll('.exhibit-card video').forEach((video) => {
+        if (video.dataset.inlinePlayBound === '1') return;
+        video.dataset.inlinePlayBound = '1';
+
+        video.muted = true;
+        video.loop = true;
+        video.playsInline = true;
+        video.autoplay = true;
+
+        video.play().catch(() => {});
+    });
+}
+
 // ── Load exhibition ──
 async function loadExhibition(id) {
     currentExhibition = await api.getExhibitionById(id);
@@ -74,11 +137,11 @@ async function loadExhibition(id) {
     }
 
     // Exhibits
-    renderExhibits(currentExhibition.exhibits || []);
+    await renderExhibits(currentExhibition.exhibits || []);
 }
 
 // ── Render exhibits ──
-function renderExhibits(exhibits) {
+async function renderExhibits(exhibits) {
     const grid = document.getElementById('exhibits-grid');
     if (!grid) return;
 
@@ -88,26 +151,33 @@ function renderExhibits(exhibits) {
     }
 
     grid.innerHTML = exhibits.map(exhibit => {
-        const imgs = exhibit.image_urls || [];
-        const firstImg = imgs.length > 0 ? imgs[0] : '';
+        const media = normalizeMediaUrls(exhibit.image_urls || []);
+        const firstMedia = media.length > 0 ? media[0] : '';
+        const title = escapeHtml(exhibit.title || '');
+        const desc = escapeHtml(truncateText(exhibit.description || '', 100));
+        const mediaHtml = firstMedia
+            ? buildCardMedia(firstMedia, exhibit.title || '', 'exhibit-card-media', 'exhibit-card-media', 'exhibit-card-embed')
+            : '<span class="exhibit-card-placeholder">Нет медиа</span>';
+
         return `
-        <div class="exhibit-card" onclick="openExhibitModal('${exhibit.id}')">
+        <div class="exhibit-card" data-hover-play-video="1" onclick="openExhibitModal('${exhibit.id}')">
             <div class="exhibit-card-image">
-                ${firstImg
-                    ? `<img src="${firstImg}" alt="${exhibit.title}">`
-                    : `<span class="exhibit-card-placeholder">✻</span>`
-                }
-                ${imgs.length > 1 ? `<span class="exhibit-card-count">${imgs.length} фото</span>` : ''}
+                ${mediaHtml}
+                ${media.length > 1 ? `<span class="exhibit-card-count">${media.length} медиа</span>` : ''}
             </div>
             <div class="exhibit-card-body">
-                <h4 class="exhibit-card-title">${exhibit.title}</h4>
-                <p class="exhibit-card-desc">${truncateText(exhibit.description || '', 100)}</p>
+                <h4 class="exhibit-card-title">${title}</h4>
+                <p class="exhibit-card-desc">${desc}</p>
             </div>
         </div>
     `}).join('');
 
+    await hydrateImgurMedia(grid);
+
     // Scroll animations
     initExhibitAnimations();
+    initInlineCardVideoPlayback(grid);
+    initHoverMediaPlayback(grid);
 }
 
 function initExhibitAnimations() {
@@ -141,7 +211,7 @@ function initExhibitModal() {
     });
 }
 
-function openExhibitModal(exhibitId) {
+async function openExhibitModal(exhibitId) {
     if (!currentExhibition) return;
     const exhibits = currentExhibition.exhibits || [];
     const exhibit = exhibits.find(e => e.id === exhibitId);
@@ -151,13 +221,16 @@ function openExhibitModal(exhibitId) {
     const body = document.getElementById('exhibit-modal-body');
     if (!modal || !body) return;
 
-    const imgs = exhibit.image_urls || [];
+    const title = escapeHtml(exhibit.title || '');
+    const description = escapeHtml(exhibit.description || 'Описание экспоната отсутствует');
 
     body.innerHTML = `
-        ${buildImageCarousel(imgs, exhibit.title)}
-        <h2 class="modal-title">${exhibit.title}</h2>
-        <p class="modal-description">${exhibit.description || 'Описание экспоната отсутствует'}</p>
+        ${buildImageCarousel(exhibit.image_urls || [], exhibit.title || '')}
+        <h2 class="modal-title">${title}</h2>
+        <p class="modal-description">${description}</p>
     `;
+
+    await hydrateImgurMedia(body);
 
     initModalCarousel(body);
 
@@ -198,7 +271,7 @@ function showError(message) {
 
     if (titleEl) titleEl.textContent = 'Ошибка';
     if (descEl) {
-        descEl.innerHTML = `${message} <a href="index.html" style="color:#c9a96e;">← Вернуться на главную</a>`;
+        descEl.innerHTML = `${escapeHtml(message)} <a href="index.html" style="color:#c9a96e;">Вернуться на главную</a>`;
     }
     if (grid) grid.innerHTML = '';
 }

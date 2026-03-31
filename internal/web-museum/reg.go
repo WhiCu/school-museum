@@ -29,4 +29,5 @@ func RegisterHandlers(
 	h.GetAllExhibitions(api)
 	h.GetExhibitionByID(api)
 	h.RecordVisit(api)
+	h.ResolveMedia(api)
 }

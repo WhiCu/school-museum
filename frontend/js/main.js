@@ -91,6 +91,55 @@ function initScrollAnimations() {
     });
 }
 
+function initHoverMediaPlayback(scope = document) {
+    scope.querySelectorAll('[data-hover-play-video]').forEach((card) => {
+        if (card.dataset.hoverBound === '1') return;
+        card.dataset.hoverBound = '1';
+
+        const video = card.querySelector('video');
+        const embed = card.querySelector('iframe[data-embed-base][data-embed-provider]');
+
+        if (!video && !embed) return;
+
+        if (video) {
+            video.muted = true;
+            video.playsInline = true;
+        }
+
+        card.addEventListener('mouseenter', () => {
+            if (video) {
+                video.currentTime = 0;
+                video.play().catch(() => {});
+            }
+
+            if (embed) {
+                const provider = embed.dataset.embedProvider;
+                const base = embed.dataset.embedBase;
+                const nextSrc = buildExternalEmbedSrc(base, provider, true);
+                if (nextSrc) {
+                    embed.src = nextSrc;
+                }
+            }
+        });
+
+        card.addEventListener('mouseleave', () => {
+            if (video) {
+                video.pause();
+                video.currentTime = 0;
+            }
+
+            if (embed) {
+                const provider = embed.dataset.embedProvider;
+                const base = embed.dataset.embedBase;
+                const nextSrc = buildExternalEmbedSrc(base, provider, false);
+                if (nextSrc) {
+                    embed.src = nextSrc;
+                }
+            }
+        });
+    });
+}
+
 // ── Load news highlight (dark strip) ──
 async function loadNewsHighlight() {
     const track = document.getElementById('news-hl-track');
@@ -103,20 +152,23 @@ async function loadNewsHighlight() {
     }
 
     track.innerHTML = newsData.map(n => {
-        const imgs = n.image_urls || [];
-        const firstImg = imgs.length > 0 ? imgs[0] : '';
+        const media = normalizeMediaUrls(n.image_urls || []);
+        const firstMedia = media.length > 0 ? media[0] : '';
+        const title = escapeHtml(n.title || '');
         return `
         <div class="news-hl-card" onclick="openNewsModal('${n.id}')">
-            ${firstImg
-                ? `<img src="${firstImg}" alt="${n.title}" class="news-hl-image">`
-                : `<div class="news-hl-image-placeholder"><span>📰</span></div>`
+            ${firstMedia
+                ? buildCardMedia(firstMedia, n.title || '', 'news-hl-image', 'news-hl-image', 'news-hl-embed')
+                : `<div class="news-hl-image-placeholder"><span>Нет медиа</span></div>`
             }
             <div class="news-hl-body">
                 <div class="news-card-date">${formatDate(n.created_at)}</div>
-                <h3 class="news-hl-title">${n.title}</h3>
+                <h3 class="news-hl-title">${title}</h3>
             </div>
         </div>
     `}).join('');
+
+    await hydrateImgurMedia(track);
 
     const ctrl = initCarousel('news-hl-carousel', 'news-hl-dots');
     if (ctrl) ctrl.refresh();
@@ -292,37 +344,42 @@ async function loadExhibitions() {
         return;
     }
 
-    const icons = ['🏛', '⭐', '📚', '🎨', '🗿', '🔬', '🌍', '🎭'];
-
-    grid.innerHTML = exhibitions.map((ex, i) => {
+    grid.innerHTML = exhibitions.map((ex) => {
         const exhibitCount = (ex.exhibits || []).length;
-        const icon = icons[i % icons.length];
-        // Find preview image from the selected preview exhibit
-        let previewImg = '';
+        const title = escapeHtml(ex.title || '');
+        const desc = escapeHtml(truncateText(ex.description || '', 140));
+
+        // Find preview media from the selected preview exhibit
+        let previewMedia = '';
         if (ex.preview_exhibit_id && ex.exhibits) {
             const previewExhibit = ex.exhibits.find(e => e.id === ex.preview_exhibit_id);
             if (previewExhibit) {
-                const imgs = previewExhibit.image_urls || [];
-                if (imgs.length > 0) previewImg = imgs[0];
+                const media = normalizeMediaUrls(previewExhibit.image_urls || []);
+                if (media.length > 0) previewMedia = media[0];
             }
         }
+
+        const previewHtml = previewMedia
+            ? buildCardMedia(previewMedia, ex.title || '', 'exhibition-card-preview-img', 'exhibition-card-preview-video', 'exhibition-card-preview-embed')
+            : '<span class="exhibition-card-placeholder">Музей</span>';
+
         return `
-            <div class="exhibition-card" onclick="openExhibition('${ex.id}')">
+            <div class="exhibition-card" data-hover-play-video="1" onclick="openExhibition('${ex.id}')">
                 <div class="exhibition-card-image">
-                    ${previewImg
-                        ? `<img src="${previewImg}" alt="${ex.title}" class="exhibition-card-preview-img">`
-                        : `<span class="exhibition-card-icon">${icon}</span>`
-                    }
+                    ${previewHtml}
                     ${exhibitCount > 0 ? `<span class="exhibition-card-count">${exhibitCount} экспонатов</span>` : ''}
                 </div>
                 <div class="exhibition-card-body">
-                    <h3 class="exhibition-card-title">${ex.title}</h3>
-                    <p class="exhibition-card-desc">${truncateText(ex.description || '', 140)}</p>
-                    <span class="exhibition-card-link">Подробнее →</span>
+                    <h3 class="exhibition-card-title">${title}</h3>
+                    <p class="exhibition-card-desc">${desc}</p>
+                    <span class="exhibition-card-link">Подробнее</span>
                 </div>
             </div>
         `;
     }).join('');
+
+    await hydrateImgurMedia(grid);
+    initHoverMediaPlayback(grid);
 
     const ctrl = initCarousel('exhibitions-carousel', 'exhibitions-dots', { perView: 1 });
     if (ctrl) ctrl.refresh();
@@ -357,15 +414,18 @@ async function openNewsModal(id) {
     const news = await api.getNewsById(id);
     if (!news) return;
 
-    const imgs = news.image_urls || [];
-    const imagesHtml = buildImageCarousel(imgs, news.title);
+    const imagesHtml = buildImageCarousel(news.image_urls || [], news.title || '');
+    const title = escapeHtml(news.title || '');
+    const content = escapeHtml(news.content || 'Содержание новости отсутствует');
 
     body.innerHTML = `
         ${imagesHtml}
-        <h2 class="modal-title">${news.title}</h2>
+        <h2 class="modal-title">${title}</h2>
         <div class="news-card-date" style="margin-bottom: 16px;">${formatDate(news.created_at)}</div>
-        <p class="modal-description">${news.content || 'Содержание новости отсутствует'}</p>
+        <p class="modal-description">${content}</p>
     `;
+
+    await hydrateImgurMedia(body);
 
     initModalCarousel(body);
 
