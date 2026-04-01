@@ -30,6 +30,9 @@ func (h *Handler) GetAllExhibitions(api huma.API) {
 			if err != nil {
 				return nil, huma.Error500InternalServerError("не удалось получить экспозиции")
 			}
+			if exhibitions == nil {
+				exhibitions = []model.Exhibition{}
+			}
 			return &getAllExhibitionsOutput{Body: exhibitions}, nil
 		},
 	)

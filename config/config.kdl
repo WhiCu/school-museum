@@ -18,14 +18,3 @@ storage host="localhost" port="5432" {
     user "user"
     pass "password"
 }
-
-telemetry enabled=true {
-    otlp_endpoint "jaeger:4318"
-    service_name "school-museum"
-    umami enabled=true {
-        url "http://umami:3000"
-        username "admin"
-        password "umami"
-        domain "school-museum.local"
-    }
-}

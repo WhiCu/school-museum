@@ -10,18 +10,22 @@ import (
 )
 
 type Storage struct {
-	News        storage.Storage[model.News]
-	Exhibitions storage.Storage[model.Exhibition]
-	Exhibits    storage.Storage[model.Exhibit]
-	log         *slog.Logger
+	News               storage.Storage[model.News]
+	Exhibitions        storage.Storage[model.Exhibition]
+	ExhibitionStorage  *storage.ExhibitionStorage
+	Exhibits           storage.Storage[model.Exhibit]
+	Visits             *storage.VisitStorage
+	log                *slog.Logger
 }
 
-func NewStorage(news storage.Storage[model.News], exhibitions storage.Storage[model.Exhibition], exhibits storage.Storage[model.Exhibit], log *slog.Logger) *Storage {
+func NewStorage(news storage.Storage[model.News], exhibitions *storage.ExhibitionStorage, exhibits storage.Storage[model.Exhibit], visits *storage.VisitStorage, log *slog.Logger) *Storage {
 	return &Storage{
-		News:        news,
-		Exhibitions: exhibitions,
-		Exhibits:    exhibits,
-		log:         log,
+		News:              news,
+		Exhibitions:       exhibitions,
+		ExhibitionStorage: exhibitions,
+		Exhibits:          exhibits,
+		Visits:            visits,
+		log:               log,
 	}
 }
 
@@ -88,6 +92,19 @@ func (s *Storage) ExhibitionExists(ctx context.Context, id uuid.UUID) bool {
 	return err == nil
 }
 
+func (s *Storage) SetExhibitionPreview(ctx context.Context, exhibitionID uuid.UUID, exhibitID *uuid.UUID) (model.Exhibition, error) {
+	if err := s.ExhibitionStorage.SetPreview(ctx, exhibitionID, exhibitID); err != nil {
+		s.log.Error("failed to set exhibition preview", slog.String("id", exhibitionID.String()), slog.String("error", err.Error()))
+		return model.Exhibition{}, err
+	}
+	ex, err := s.Exhibitions.Read(ctx, exhibitionID)
+	if err != nil {
+		s.log.Error("failed to re-read exhibition", slog.String("id", exhibitionID.String()), slog.String("error", err.Error()))
+		return model.Exhibition{}, err
+	}
+	return ex, nil
+}
+
 // --- Exhibits ---
 
 func (s *Storage) CreateExhibit(ctx context.Context, e model.Exhibit) (model.Exhibit, error) {
@@ -115,4 +132,15 @@ func (s *Storage) DeleteExhibit(ctx context.Context, id uuid.UUID) error {
 		return err
 	}
 	return nil
+}
+
+// --- Stats ---
+
+func (s *Storage) GetStats(ctx context.Context) (model.VisitStats, error) {
+	stats, err := s.Visits.Stats(ctx)
+	if err != nil {
+		s.log.Error("failed to get stats", slog.String("error", err.Error()))
+		return model.VisitStats{}, err
+	}
+	return stats, nil
 }

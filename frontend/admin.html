@@ -1,44 +1,182 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Админ-панель — Музей лицея №76</title>
+    <title>Админ-панель — Музей «Страницы истории»</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/admin.css">
 </head>
-<body>
-    <header class="header">
-        <nav class="nav">
-            <a href="index.html" class="nav-item">← НА САЙТ</a>
-            <span class="nav-item admin-brand">АДМИН-ПАНЕЛЬ</span>
-        </nav>
+<body class="admin-body">
+
+    <!-- ═══════════ LOGIN SCREEN ═══════════ -->
+    <div id="login-screen" class="login-screen">
+        <div class="login-card">
+            <h2 class="login-title">Панель управления</h2>
+            <p class="login-subtitle">Введите логин и пароль администратора</p>
+            <form id="login-form" class="login-form">
+                <div class="form-group">
+                    <label for="login-username">Логин</label>
+                    <input type="text" id="login-username" placeholder="admin" autocomplete="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Пароль</label>
+                    <input type="password" id="login-password" placeholder="••••••" autocomplete="current-password" required>
+                </div>
+                <div id="login-error" class="login-error" style="display:none;"></div>
+                <button type="submit" class="btn btn-primary login-btn">Войти</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ═══════════ HEADER ═══════════ -->
+    <header class="admin-header admin-hidden" id="admin-main">
+        <div class="admin-header-inner">
+            <a href="index.html" class="admin-back">
+                <span class="admin-back-arrow">←</span>
+                <span>На сайт</span>
+            </a>
+            <span class="admin-brand-title">Панель управления музеем</span>
+            <button class="btn btn-small btn-logout" id="btn-logout" title="Выйти">Выход</button>
+        </div>
     </header>
 
-    <main class="admin-main">
-        <aside class="admin-sidebar">
+    <!-- ═══════════ LAYOUT ═══════════ -->
+    <div class="admin-layout admin-hidden" id="admin-layout">
+
+        <!-- Sidebar -->
+        <aside class="admin-sidebar" id="admin-sidebar">
             <ul class="sidebar-menu">
-                <li class="sidebar-item active" data-section="exhibitions">
-                    <span class="sidebar-icon">🏛️</span> Экспозиции
+                <li class="sidebar-item active" data-section="stats">
+                    <span class="sidebar-label">Статистика</span>
+                </li>
+                <li class="sidebar-item" data-section="exhibitions">
+                    <span class="sidebar-label">Экспозиции</span>
                 </li>
                 <li class="sidebar-item" data-section="exhibits">
-                    <span class="sidebar-icon">🖼️</span> Экспонаты
+                    <span class="sidebar-label">Экспонаты</span>
                 </li>
                 <li class="sidebar-item" data-section="news">
-                    <span class="sidebar-icon">📰</span> Новости
+                    <span class="sidebar-label">Новости</span>
                 </li>
             </ul>
         </aside>
 
+        <!-- Content -->
         <section class="admin-content">
+
+            <!-- Статистика -->
+            <div id="section-stats" class="admin-section active">
+                <div class="section-header">
+                    <h2>Статистика посещений</h2>
+                    <button class="btn btn-small btn-secondary" onclick="loadAdminStats()" title="Обновить">Обновить</button>
+                </div>
+                <div id="stats-panel" class="stats-panel">
+
+                    <!-- Посещения по периодам -->
+                    <div class="stats-group stats-group--visitors">
+                        <h3 class="stats-group-title">Уникальные посетители (по последнему заходу)</h3>
+                        <div class="stats-cards" id="stats-cards">
+                            <div class="admin-stat-card">
+                                <div class="admin-stat-value" id="admin-stat-today">&mdash;</div>
+                                <div class="admin-stat-label">Сегодня</div>
+                            </div>
+                            <div class="admin-stat-card">
+                                <div class="admin-stat-value" id="admin-stat-week">&mdash;</div>
+                                <div class="admin-stat-label">За неделю</div>
+                            </div>
+                            <div class="admin-stat-card">
+                                <div class="admin-stat-value" id="admin-stat-month">&mdash;</div>
+                                <div class="admin-stat-label">За месяц</div>
+                            </div>
+                            <div class="admin-stat-card">
+                                <div class="admin-stat-value" id="admin-stat-total">&mdash;</div>
+                                <div class="admin-stat-label">Всего</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Новые посетители -->
+                    <div class="stats-group stats-group--new">
+                        <h3 class="stats-group-title">Новые посетители (впервые на сайте)</h3>
+                        <div class="stats-cards">
+                            <div class="admin-stat-card card-accent-green">
+                                <div class="admin-stat-value" id="admin-stat-new-today">&mdash;</div>
+                                <div class="admin-stat-label">Сегодня</div>
+                            </div>
+                            <div class="admin-stat-card card-accent-green">
+                                <div class="admin-stat-value" id="admin-stat-new-week">&mdash;</div>
+                                <div class="admin-stat-label">За неделю</div>
+                            </div>
+                            <div class="admin-stat-card card-accent-green">
+                                <div class="admin-stat-value" id="admin-stat-new-month">&mdash;</div>
+                                <div class="admin-stat-label">За месяц</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Вовлечённость -->
+                    <div class="stats-group stats-group--engagement">
+                        <h3 class="stats-group-title">Вовлечённость</h3>
+                        <div class="stats-cards">
+                            <div class="admin-stat-card card-accent-purple">
+                                <div class="admin-stat-value" id="admin-stat-returning">&mdash;</div>
+                                <div class="admin-stat-label">Вернувшиеся</div>
+                            </div>
+                            <div class="admin-stat-card card-accent-purple">
+                                <div class="admin-stat-value" id="admin-stat-pageviews">&mdash;</div>
+                                <div class="admin-stat-label">Всего просмотров</div>
+                            </div>
+                            <div class="admin-stat-card card-accent-purple">
+                                <div class="admin-stat-value" id="admin-stat-avg">&mdash;</div>
+                                <div class="admin-stat-label">Среднее визитов</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- График за 7 дней -->
+                    <div class="stats-group stats-group--chart">
+                        <h3 class="stats-group-title">Посещения за последние 7 дней</h3>
+                        <div class="stats-chart-container" id="stats-chart-container">
+                            <div class="stats-chart" id="stats-chart"></div>
+                        </div>
+                    </div>
+
+                    <!-- Контент -->
+                    <div class="stats-group stats-group--content">
+                        <h3 class="stats-group-title">Контент музея</h3>
+                        <div class="stats-cards stats-cards-secondary" id="stats-cards-secondary">
+                            <div class="admin-stat-card card-accent-blue">
+                                <div class="admin-stat-value" id="admin-stat-exhibitions">&mdash;</div>
+                                <div class="admin-stat-label">Экспозиций</div>
+                            </div>
+                            <div class="admin-stat-card card-accent-blue">
+                                <div class="admin-stat-value" id="admin-stat-exhibits">&mdash;</div>
+                                <div class="admin-stat-label">Экспонатов</div>
+                            </div>
+                            <div class="admin-stat-card card-accent-blue">
+                                <div class="admin-stat-value" id="admin-stat-news">&mdash;</div>
+                                <div class="admin-stat-label">Новостей</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
             <!-- Экспозиции -->
-            <div id="section-exhibitions" class="admin-section active">
+            <div id="section-exhibitions" class="admin-section">
                 <div class="section-header">
                     <h2>Экспозиции</h2>
-                    <button class="btn btn-primary" onclick="showExhibitionForm()">+ Добавить</button>
+                    <button class="btn btn-primary" onclick="showExhibitionForm()">
+                        <span class="btn-icon">+</span> Добавить
+                    </button>
                 </div>
                 <div id="exhibitions-list" class="items-list">
-                    <div class="loading">Загрузка...</div>
+                    <div class="loading-state"><div class="spinner"></div><p>Загрузка...</p></div>
                 </div>
             </div>
 
@@ -46,10 +184,12 @@
             <div id="section-exhibits" class="admin-section">
                 <div class="section-header">
                     <h2>Экспонаты</h2>
-                    <button class="btn btn-primary" onclick="showExhibitForm()">+ Добавить</button>
+                    <button class="btn btn-primary" onclick="showExhibitForm()">
+                        <span class="btn-icon">+</span> Добавить
+                    </button>
                 </div>
                 <div id="exhibits-list" class="items-list">
-                    <div class="loading">Загрузка...</div>
+                    <div class="loading-state"><div class="spinner"></div><p>Загрузка...</p></div>
                 </div>
             </div>
 
@@ -57,14 +197,17 @@
             <div id="section-news" class="admin-section">
                 <div class="section-header">
                     <h2>Новости</h2>
-                    <button class="btn btn-primary" onclick="showNewsForm()">+ Добавить</button>
+                    <button class="btn btn-primary" onclick="showNewsForm()">
+                        <span class="btn-icon">+</span> Добавить
+                    </button>
                 </div>
                 <div id="news-list" class="items-list">
-                    <div class="loading">Загрузка...</div>
+                    <div class="loading-state"><div class="spinner"></div><p>Загрузка...</p></div>
                 </div>
             </div>
+
         </section>
-    </main>
+    </div>
 
     <!-- Модальное окно -->
     <div id="modal-overlay" class="modal-overlay" onclick="closeModal(event)">
@@ -73,12 +216,11 @@
                 <h3 id="modal-title">Заголовок</h3>
                 <button class="modal-close" onclick="closeModal()">&times;</button>
             </div>
-            <div id="modal-body" class="modal-body">
-                <!-- Динамическое содержимое формы -->
-            </div>
+            <div id="modal-body" class="modal-body"></div>
         </div>
     </div>
 
+    <script src="js/api.js"></script>
     <script src="js/admin.js"></script>
 </body>
 </html>

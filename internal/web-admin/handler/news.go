@@ -12,9 +12,9 @@ import (
 // CreateNews - создание новой новости.
 type createNewsInput struct {
 	Body struct {
-		Title    string `json:"title" minLength:"1" doc:"Заголовок новости"`
-		Content  string `json:"content" doc:"Содержание новости"`
-		ImageURL string `json:"image_url" doc:"URL изображения новости"`
+		Title     string   `json:"title" minLength:"1" doc:"Заголовок новости"`
+		Content   string   `json:"content" doc:"Содержание новости"`
+		ImageURLs []string `json:"image_urls" doc:"URLs изображений новости"`
 	}
 }
 
@@ -35,9 +35,9 @@ func (h *Handler) CreateNews(api huma.API) {
 		},
 		func(ctx context.Context, req *createNewsInput) (*createNewsOutput, error) {
 			n, err := h.service.CreateNews(ctx, model.News{
-				Title:    req.Body.Title,
-				Content:  req.Body.Content,
-				ImageURL: req.Body.ImageURL,
+				Title:     req.Body.Title,
+				Content:   req.Body.Content,
+				ImageURLs: req.Body.ImageURLs,
 			})
 			if err != nil {
 				return nil, huma.Error500InternalServerError("не удалось создать новость")
@@ -51,9 +51,9 @@ func (h *Handler) CreateNews(api huma.API) {
 type updateNewsInput struct {
 	ID   uuid.UUID `path:"id" format:"uuid" doc:"ID новости"`
 	Body struct {
-		Title    string `json:"title" doc:"Заголовок новости"`
-		Content  string `json:"content" doc:"Содержание новости"`
-		ImageURL string `json:"image_url" doc:"URL изображения новости"`
+		Title     string   `json:"title" doc:"Заголовок новости"`
+		Content   string   `json:"content" doc:"Содержание новости"`
+		ImageURLs []string `json:"image_urls" doc:"URLs изображений новости"`
 	}
 }
 
@@ -74,10 +74,10 @@ func (h *Handler) UpdateNews(api huma.API) {
 		},
 		func(ctx context.Context, req *updateNewsInput) (*updateNewsOutput, error) {
 			n, err := h.service.UpdateNews(ctx, model.News{
-				ID:       req.ID,
-				Title:    req.Body.Title,
-				Content:  req.Body.Content,
-				ImageURL: req.Body.ImageURL,
+				ID:        req.ID,
+				Title:     req.Body.Title,
+				Content:   req.Body.Content,
+				ImageURLs: req.Body.ImageURLs,
 			})
 			if err != nil {
 				return nil, huma.Error500InternalServerError("не удалось обновить новость")

@@ -1,144 +1,467 @@
-// Главная страница - скрипт
+// ═══════════════════════════════════════════════
+// Главная страница — JavaScript
+// ═══════════════════════════════════════════════
 
-let exhibitions = [];
-let currentExhibitionIndex = 0;
-
-// Инициализация страницы
-document.addEventListener('DOMContentLoaded', async () => {
-    await loadNews();
-    await loadExhibitions();
+document.addEventListener('DOMContentLoaded', () => {
+    initHeader();
+    initBurger();
+    initScrollAnimations();
+    loadNewsHighlight();
+    loadExhibitions();
+    initNewsModal();
+    initYandexMap();
+    trackVisit();
 });
 
-// Загрузка новостей
-async function loadNews() {
-    const newsContainer = document.getElementById('news-container');
-    newsContainer.innerHTML = '<div class="loading">Загрузка новостей</div>';
+// ── Track page visit ──
+function trackVisit() {
+    const data = {
+        page: window.location.pathname,
+        referrer: document.referrer || '',
+        screen_width: window.screen.width || 0,
+        screen_height: window.screen.height || 0,
+        language: navigator.language || navigator.userLanguage || ''
+    };
 
-    const newsData = await api.getAllNews();
-    
-    if (newsData && newsData.length > 0) {
-        newsContainer.innerHTML = newsData.map(news => `
-            <div class="news-card" onclick="openNews('${news.id}')">
-                ${news.image_url ? `<img src="${news.image_url}" alt="${news.title}" class="news-image">` : ''}
-                <h3>${news.title}</h3>
-                <p>${truncateText(news.content, 150)}</p>
-                <div class="news-date">${formatDate(news.created_at)}</div>
-            </div>
-        `).join('');
-    } else {
-        newsContainer.innerHTML = '<p>Новости пока отсутствуют</p>';
-    }
+    fetch('/museum/visit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    }).catch(() => {});
 }
 
-// Загрузка экспозиций
-async function loadExhibitions() {
-    const exhibitionCard = document.getElementById('exhibition-card');
-    const dotsContainer = document.getElementById('carousel-dots');
-    
-    exhibitions = await api.getAllExhibitions();
-    
-    if (exhibitions && exhibitions.length > 0) {
-        // Создаем точки навигации
-        dotsContainer.innerHTML = exhibitions.map((_, index) => `
-            <span class="dot ${index === 0 ? 'active' : ''}" onclick="goToExhibition(${index})"></span>
-        `).join('');
-        
-        // Показываем первую экспозицию
-        showExhibition(0);
-    } else {
-        exhibitionCard.innerHTML = `
-            <div class="exhibition-info">
-                <p class="exhibition-note">Экспозиции пока не добавлены</p>
-            </div>
-        `;
-    }
+// ── Header scroll effect ──
+function initHeader() {
+    const header = document.getElementById('header');
+    if (!header) return;
+
+    const onScroll = () => {
+        header.classList.toggle('scrolled', window.scrollY > 50);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
 }
 
-// Показать экспозицию по индексу
-function showExhibition(index) {
-    if (!exhibitions || exhibitions.length === 0) return;
-    
-    currentExhibitionIndex = index;
-    const exhibition = exhibitions[index];
-    const exhibitionCard = document.getElementById('exhibition-card');
-    
-    exhibitionCard.innerHTML = `
-        <div class="exhibition-info" onclick="openExhibition('${exhibition.id}')">
-            <h3 class="exhibition-title">${exhibition.title}</h3>
-            <p class="exhibition-text">${exhibition.description || 'Нажмите, чтобы узнать больше'}</p>
-            <p class="exhibition-description">Нажмите для перехода к экспозиции →</p>
-        </div>
-    `;
-    
-    // Обновляем точки
-    updateDots();
-}
+// ── Burger menu ──
+function initBurger() {
+    const burger = document.getElementById('burger');
+    const nav = document.getElementById('nav');
+    if (!burger || !nav) return;
 
-// Обновить активную точку
-function updateDots() {
-    const dots = document.querySelectorAll('.dot');
-    dots.forEach((dot, index) => {
-        dot.classList.toggle('active', index === currentExhibitionIndex);
+    burger.addEventListener('click', () => {
+        burger.classList.toggle('active');
+        nav.classList.toggle('open');
+    });
+
+    // Close on link click
+    nav.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', () => {
+            burger.classList.remove('active');
+            nav.classList.remove('open');
+        });
     });
 }
 
-// Предыдущая экспозиция
-function prevExhibition() {
-    if (exhibitions.length === 0) return;
-    currentExhibitionIndex = (currentExhibitionIndex - 1 + exhibitions.length) % exhibitions.length;
-    showExhibition(currentExhibitionIndex);
+// ── Scroll animations (Intersection Observer) ──
+function initScrollAnimations() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+    const selectors = [
+        '.about-content',
+        '.team-card',
+        '.visit-card',
+        '.contacts-inner',
+        '.carousel'
+    ];
+
+    requestAnimationFrame(() => {
+        selectors.forEach(sel => {
+            document.querySelectorAll(sel).forEach(el => {
+                el.classList.add('fade-in');
+                observer.observe(el);
+            });
+        });
+    });
 }
 
-// Следующая экспозиция
-function nextExhibition() {
-    if (exhibitions.length === 0) return;
-    currentExhibitionIndex = (currentExhibitionIndex + 1) % exhibitions.length;
-    showExhibition(currentExhibitionIndex);
+function initHoverMediaPlayback(scope = document) {
+    scope.querySelectorAll('[data-hover-play-video]').forEach((card) => {
+        if (card.dataset.hoverBound === '1') return;
+        card.dataset.hoverBound = '1';
+
+        const video = card.querySelector('video');
+        const embed = card.querySelector('iframe[data-embed-base][data-embed-provider]');
+
+        if (!video && !embed) return;
+
+        if (video) {
+            video.muted = true;
+            video.playsInline = true;
+        }
+
+        card.addEventListener('mouseenter', () => {
+            if (video) {
+                video.currentTime = 0;
+                video.play().catch(() => {});
+            }
+
+            if (embed) {
+                const provider = embed.dataset.embedProvider;
+                const base = embed.dataset.embedBase;
+                const nextSrc = buildExternalEmbedSrc(base, provider, true);
+                if (nextSrc) {
+                    embed.src = nextSrc;
+                }
+            }
+        });
+
+        card.addEventListener('mouseleave', () => {
+            if (video) {
+                video.pause();
+                video.currentTime = 0;
+            }
+
+            if (embed) {
+                const provider = embed.dataset.embedProvider;
+                const base = embed.dataset.embedBase;
+                const nextSrc = buildExternalEmbedSrc(base, provider, false);
+                if (nextSrc) {
+                    embed.src = nextSrc;
+                }
+            }
+        });
+    });
 }
 
-// Перейти к конкретной экспозиции
-function goToExhibition(index) {
-    showExhibition(index);
+// ── Load news highlight (dark strip) ──
+async function loadNewsHighlight() {
+    const track = document.getElementById('news-hl-track');
+    if (!track) return;
+
+    const newsData = await api.getAllNews();
+    if (!newsData || newsData.length === 0) {
+        track.innerHTML = '<div class="empty-state" style="color:rgba(255,255,255,.5)">Новости пока отсутствуют</div>';
+        return;
+    }
+
+    track.innerHTML = newsData.map(n => {
+        const media = normalizeMediaUrls(n.image_urls || []);
+        const firstMedia = media.length > 0 ? media[0] : '';
+        const title = escapeHtml(n.title || '');
+        return `
+        <div class="news-hl-card" onclick="openNewsModal('${n.id}')">
+            ${firstMedia
+                ? buildCardMedia(firstMedia, n.title || '', 'news-hl-image', 'news-hl-image', 'news-hl-embed')
+                : `<div class="news-hl-image-placeholder"><span>Нет медиа</span></div>`
+            }
+            <div class="news-hl-body">
+                <div class="news-card-date">${formatDate(n.created_at)}</div>
+                <h3 class="news-hl-title">${title}</h3>
+            </div>
+        </div>
+    `}).join('');
+
+    await hydrateImgurMedia(track);
+
+    const ctrl = initCarousel('news-hl-carousel', 'news-hl-dots');
+    if (ctrl) ctrl.refresh();
 }
 
-// Открыть страницу экспозиции
+// ═══════════════════════════════════════════════
+// Carousel controller (generic)
+// ═══════════════════════════════════════════════
+
+function initCarousel(carouselId, dotsId, options = {}) {
+    const carousel = document.getElementById(carouselId);
+    if (!carousel) return null;
+
+    const track = carousel.querySelector('.carousel-track');
+    const dotsContainer = document.getElementById(dotsId);
+    const prevBtn = carousel.querySelector('.carousel-arrow--prev');
+    const nextBtn = carousel.querySelector('.carousel-arrow--next');
+
+    const fixedPerView = options.perView || null; // null = responsive
+
+    let currentIndex = 0;
+    let perView = fixedPerView || getPerView();
+    let totalSlides = 0;
+    let maxIndex = 0;
+    let autoTimer = null;
+
+    function getPerView() {
+        if (fixedPerView) return fixedPerView;
+        const w = window.innerWidth;
+        if (w <= 600) return 1;
+        if (w <= 960) return 2;
+        return 3;
+    }
+
+    function recalc() {
+        const cards = track.children;
+        totalSlides = cards.length;
+        perView = getPerView();
+        maxIndex = Math.max(0, totalSlides - perView);
+        if (currentIndex > maxIndex) currentIndex = maxIndex;
+    }
+
+    function slide(animate = true) {
+        if (!track.children.length) return;
+        const card = track.children[0];
+        const gap = 28;
+        const cardWidth = card.offsetWidth + gap;
+        const offset = currentIndex * cardWidth;
+        track.style.transition = animate ? 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)' : 'none';
+        track.style.transform = `translateX(-${offset}px)`;
+        updateArrows();
+        updateDots();
+    }
+
+    function updateArrows() {
+        if (prevBtn) prevBtn.disabled = currentIndex <= 0;
+        if (nextBtn) nextBtn.disabled = currentIndex >= maxIndex;
+    }
+
+    function updateDots() {
+        if (!dotsContainer) return;
+        const pages = maxIndex + 1;
+        // Rebuild dots if count changed
+        if (dotsContainer.children.length !== pages) {
+            dotsContainer.innerHTML = '';
+            for (let i = 0; i < pages; i++) {
+                const dot = document.createElement('button');
+                dot.className = 'carousel-dot';
+                dot.setAttribute('aria-label', `Страница ${i + 1}`);
+                dot.addEventListener('click', () => goTo(i));
+                dotsContainer.appendChild(dot);
+            }
+        }
+        Array.from(dotsContainer.children).forEach((d, i) => {
+            d.classList.toggle('active', i === currentIndex);
+        });
+    }
+
+    function goTo(index) {
+        currentIndex = Math.max(0, Math.min(index, maxIndex));
+        slide();
+        resetAuto();
+    }
+
+    function next() { goTo(currentIndex + 1); }
+    function prev() { goTo(currentIndex - 1); }
+
+    // Arrows
+    if (prevBtn) prevBtn.addEventListener('click', prev);
+    if (nextBtn) nextBtn.addEventListener('click', next);
+
+    // Touch / swipe
+    let startX = 0, startY = 0, dx = 0, swiping = false;
+
+    track.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        dx = 0;
+        swiping = true;
+        track.style.transition = 'none';
+    }, { passive: true });
+
+    track.addEventListener('touchmove', (e) => {
+        if (!swiping) return;
+        dx = e.touches[0].clientX - startX;
+        const dy = Math.abs(e.touches[0].clientY - startY);
+        if (dy > Math.abs(dx)) { swiping = false; return; }
+        const card = track.children[0];
+        const gap = 28;
+        const cardWidth = card.offsetWidth + gap;
+        const base = currentIndex * cardWidth;
+        track.style.transform = `translateX(-${base - dx}px)`;
+    }, { passive: true });
+
+    track.addEventListener('touchend', () => {
+        if (!swiping) { slide(); return; }
+        swiping = false;
+        const threshold = 50;
+        if (dx < -threshold) next();
+        else if (dx > threshold) prev();
+        else slide();
+    });
+
+    // Auto-play
+    function startAuto() {
+        stopAuto();
+        autoTimer = setInterval(() => {
+            if (currentIndex >= maxIndex) goTo(0);
+            else next();
+        }, 5000);
+    }
+
+    function stopAuto() {
+        if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+    }
+
+    function resetAuto() {
+        stopAuto();
+        startAuto();
+    }
+
+    carousel.addEventListener('mouseenter', stopAuto);
+    carousel.addEventListener('mouseleave', startAuto);
+
+    // Window resize
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            recalc();
+            slide(false);
+        }, 150);
+    });
+
+    return {
+        refresh() {
+            recalc();
+            slide(false);
+            startAuto();
+        }
+    };
+}
+
+// ── Load Exhibitions ──
+async function loadExhibitions() {
+    const grid = document.getElementById('exhibitions-grid');
+    if (!grid) return;
+
+    const exhibitions = await api.getAllExhibitions();
+
+    if (!exhibitions || exhibitions.length === 0) {
+        grid.innerHTML = '<div class="empty-state">Экспозиции пока не добавлены</div>';
+        return;
+    }
+
+    grid.innerHTML = exhibitions.map((ex) => {
+        const exhibitCount = (ex.exhibits || []).length;
+        const title = escapeHtml(ex.title || '');
+        const desc = escapeHtml(truncateText(ex.description || '', 140));
+
+        // Find preview media from the selected preview exhibit
+        let previewMedia = '';
+        if (ex.preview_exhibit_id && ex.exhibits) {
+            const previewExhibit = ex.exhibits.find(e => e.id === ex.preview_exhibit_id);
+            if (previewExhibit) {
+                const media = normalizeMediaUrls(previewExhibit.image_urls || []);
+                if (media.length > 0) previewMedia = media[0];
+            }
+        }
+
+        const previewHtml = previewMedia
+            ? buildCardMedia(previewMedia, ex.title || '', 'exhibition-card-preview-img', 'exhibition-card-preview-video', 'exhibition-card-preview-embed')
+            : '<span class="exhibition-card-placeholder">Музей</span>';
+
+        return `
+            <div class="exhibition-card" data-hover-play-video="1" onclick="openExhibition('${ex.id}')">
+                <div class="exhibition-card-image">
+                    ${previewHtml}
+                    ${exhibitCount > 0 ? `<span class="exhibition-card-count">${exhibitCount} экспонатов</span>` : ''}
+                </div>
+                <div class="exhibition-card-body">
+                    <h3 class="exhibition-card-title">${title}</h3>
+                    <p class="exhibition-card-desc">${desc}</p>
+                    <span class="exhibition-card-link">Подробнее</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    await hydrateImgurMedia(grid);
+    initHoverMediaPlayback(grid);
+
+    const ctrl = initCarousel('exhibitions-carousel', 'exhibitions-dots', { perView: 1 });
+    if (ctrl) ctrl.refresh();
+}
+
 function openExhibition(id) {
     window.location.href = `exhibition.html?id=${id}`;
 }
 
-// Открыть новость (можно реализовать модальное окно)
-function openNews(id) {
-    console.log('Open news:', id);
-    // TODO: Можно добавить модальное окно с полным текстом новости
+// ── News Modal ──
+let newsCache = [];
+
+function initNewsModal() {
+    const modal = document.getElementById('news-modal');
+    const closeBtn = document.getElementById('news-modal-close');
+    if (!modal || !closeBtn) return;
+
+    closeBtn.addEventListener('click', () => closeNewsModal());
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeNewsModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeNewsModal();
+    });
 }
 
-// Обрезать текст
-function truncateText(text, maxLength) {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
+async function openNewsModal(id) {
+    const modal = document.getElementById('news-modal');
+    const body = document.getElementById('news-modal-body');
+    if (!modal || !body) return;
+
+    const news = await api.getNewsById(id);
+    if (!news) return;
+
+    const imagesHtml = buildImageCarousel(news.image_urls || [], news.title || '');
+    const title = escapeHtml(news.title || '');
+    const content = escapeHtml(news.content || 'Содержание новости отсутствует');
+
+    body.innerHTML = `
+        ${imagesHtml}
+        <h2 class="modal-title">${title}</h2>
+        <div class="news-card-date" style="margin-bottom: 16px;">${formatDate(news.created_at)}</div>
+        <p class="modal-description">${content}</p>
+    `;
+
+    await hydrateImgurMedia(body);
+
+    initModalCarousel(body);
+
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
 }
 
-// Автопрокрутка карусели
-let autoSlideInterval;
-
-function startAutoSlide() {
-    autoSlideInterval = setInterval(() => {
-        nextExhibition();
-    }, 5000);
-}
-
-function stopAutoSlide() {
-    clearInterval(autoSlideInterval);
-}
-
-// Запуск автопрокрутки после загрузки
-document.addEventListener('DOMContentLoaded', () => {
-    startAutoSlide();
-    
-    // Останавливаем при наведении на карусель
-    const carousel = document.querySelector('.exhibitions-carousel');
-    if (carousel) {
-        carousel.addEventListener('mouseenter', stopAutoSlide);
-        carousel.addEventListener('mouseleave', startAutoSlide);
+function closeNewsModal() {
+    const modal = document.getElementById('news-modal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
     }
-});
+}
+
+// ── Yandex Map ──
+function initYandexMap() {
+    if (typeof ymaps === 'undefined') return;
+
+    ymaps.ready(() => {
+        const map = new ymaps.Map('yandex-map', {
+            center: [57.581944, 39.839645], // Ярославль, ул. Зелинского, 6
+            zoom: 16,
+            controls: ['zoomControl', 'geolocationControl']
+        });
+
+        const placemark = new ymaps.Placemark([57.581944, 39.839645], {
+            hintContent: 'Лицей №86',
+            balloonContentHeader: 'Музей «Страницы истории»',
+            balloonContentBody: 'г. Ярославль, ул. Зелинского, 6<br>Лицей №86',
+            balloonContentFooter: '+7 (905) 646-41-27'
+        }, {
+            preset: 'islands#redEducationIcon'
+        });
+
+        map.geoObjects.add(placemark);
+        map.behaviors.disable('scrollZoom');
+    });
+}

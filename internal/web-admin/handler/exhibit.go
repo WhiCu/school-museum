@@ -17,7 +17,7 @@ type createExhibitInput struct {
 		ExhibitionID uuid.UUID `json:"exhibition_id" format:"uuid" doc:"ID экспозиции"`
 		Title        string    `json:"title" minLength:"1" doc:"Название экспоната"`
 		Description  string    `json:"description" doc:"Описание экспоната"`
-		ImageURL     string    `json:"image_url" doc:"URL изображения экспоната"`
+		ImageURLs    []string  `json:"image_urls" doc:"URLs изображений экспоната"`
 	}
 }
 
@@ -46,7 +46,7 @@ func (h *Handler) CreateExhibit(api huma.API) {
 				ExhibitionID: req.Body.ExhibitionID,
 				Title:        req.Body.Title,
 				Description:  req.Body.Description,
-				ImageURL:     req.Body.ImageURL,
+				ImageURLs:    req.Body.ImageURLs,
 			})
 			if err != nil {
 				return nil, huma.Error500InternalServerError("не удалось создать экспонат")
@@ -60,9 +60,9 @@ func (h *Handler) CreateExhibit(api huma.API) {
 type updateExhibitInput struct {
 	ID   uuid.UUID `path:"id" format:"uuid" doc:"ID экспоната"`
 	Body struct {
-		Title       string `json:"title" doc:"Название экспоната"`
-		Description string `json:"description" doc:"Описание экспоната"`
-		ImageURL    string `json:"image_url" doc:"URL изображения экспоната"`
+		Title       string   `json:"title" doc:"Название экспоната"`
+		Description string   `json:"description" doc:"Описание экспоната"`
+		ImageURLs   []string `json:"image_urls" doc:"URLs изображений экспоната"`
 	}
 }
 
@@ -89,7 +89,7 @@ func (h *Handler) UpdateExhibit(api huma.API) {
 				ID:          req.ID,
 				Title:       req.Body.Title,
 				Description: req.Body.Description,
-				ImageURL:    req.Body.ImageURL,
+				ImageURLs:   req.Body.ImageURLs,
 			})
 			if err != nil {
 				return nil, huma.Error500InternalServerError("не удалось обновить экспонат")

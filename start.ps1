@@ -30,8 +30,6 @@ Write-Host '==================================' -ForegroundColor Cyan
 Write-Host ''
 Write-Host '  Frontend:  http://localhost' -ForegroundColor White
 Write-Host '  API:       http://localhost:8081' -ForegroundColor White
-Write-Host '  Jaeger:    http://localhost:16686' -ForegroundColor White
-Write-Host '  Umami:     http://localhost:3000' -ForegroundColor White
 Write-Host ''
 Write-Host '  To stop: run stop.ps1' -ForegroundColor Yellow
 Write-Host '==================================' -ForegroundColor Cyan

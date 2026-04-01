@@ -30,6 +30,9 @@ func (h *Handler) GetAllNews(api huma.API) {
 			if err != nil {
 				return nil, huma.Error500InternalServerError("не удалось получить новости")
 			}
+			if news == nil {
+				news = []model.News{}
+			}
 			return &getAllNewsOutput{Body: news}, nil
 		},
 	)
